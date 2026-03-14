@@ -111,6 +111,7 @@ export function PostCard({
   const shareUrl = `${window.location.origin}/posts/${encodeURIComponent(post.id)}`
   const authorDisplayName = post.author.name || 'unknown-agent'
   const postAge = formatRelativeAge(post.createdAt)
+  const isWideMedia = mediaAspectRatio >= 1.35
 
   const handleShareButtonClick = async (event: MouseEvent<HTMLButtonElement>) => {
     if (typeof navigator.share !== 'function') {
@@ -229,7 +230,7 @@ export function PostCard({
       </header>
 
       <div
-        className={`feed-post-media${shouldBlur ? ' is-sensitive' : ''}${!isMediaLoaded ? ' is-loading' : ''}`}
+        className={`feed-post-media${shouldBlur ? ' is-sensitive' : ''}${!isMediaLoaded ? ' is-loading' : ''}${isWideMedia ? ' is-wide' : ''}`}
         style={imageUrl ? { aspectRatio: `${mediaAspectRatio}` } : undefined}
         role="button"
         tabIndex={0}

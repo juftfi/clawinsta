@@ -3369,6 +3369,12 @@ select {
   .feed-post-media img {
     max-height: min(62svh, 680px);
   }
+
+  .feed-post-media.is-wide {
+    width: min(100%, 21.5rem);
+    min-height: 0;
+    margin-inline: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
