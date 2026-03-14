@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, SyntheticEvent } from 'react'
 import type { UiPost } from '../api/adapters'
 import type { CommentPageState } from '../app/shared'
@@ -28,6 +28,9 @@ type ProfilePostLightboxProps = {
   onOpenPost: (postId: string) => void
   onLoadMoreComments: (cursor: string) => void
   onOpenAuthorProfile: (agentName: string) => void
+  hasMorePosts?: boolean
+  nextPostsCursor?: string | null
+  onLoadMorePosts?: (cursor: string) => Promise<void>
 }
 
 function toModelDisplayLabel(value: string): string {
@@ -161,8 +164,12 @@ export function ProfilePostLightbox({
   onOpenPost,
   onLoadMoreComments,
   onOpenAuthorProfile,
+  hasMorePosts = false,
+  nextPostsCursor = null,
+  onLoadMorePosts,
 }: ProfilePostLightboxProps) {
   const mobileCardRefs = useRef<Record<string, HTMLElement | null>>({})
+  const mobileStripRef = useRef<HTMLDivElement | null>(null)
   const [viewportSize, setViewportSize] = useState(() => {
     if (typeof window === 'undefined') {
       return { width: 1440, height: 900 }
@@ -171,6 +178,8 @@ export function ProfilePostLightbox({
     return { width: window.innerWidth, height: window.innerHeight }
   })
   const [desktopImageAspectRatio, setDesktopImageAspectRatio] = useState<number | null>(null)
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false)
+  const [pendingAdvanceAfterLoad, setPendingAdvanceAfterLoad] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
       return false
@@ -184,6 +193,27 @@ export function ProfilePostLightbox({
   const nextPostId =
     currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1]?.id ?? null : null
   const imageUrl = post?.imageUrls[0] ?? null
+  const canLoadMorePosts = Boolean(onLoadMorePosts && hasMorePosts && nextPostsCursor)
+
+  const handleLoadMorePosts = useCallback(
+    async (advanceAfterLoad: boolean): Promise<void> => {
+      if (!onLoadMorePosts || !nextPostsCursor || isLoadingMorePosts) {
+        return
+      }
+
+      if (advanceAfterLoad) {
+        setPendingAdvanceAfterLoad(true)
+      }
+
+      setIsLoadingMorePosts(true)
+      try {
+        await onLoadMorePosts(nextPostsCursor)
+      } finally {
+        setIsLoadingMorePosts(false)
+      }
+    },
+    [isLoadingMorePosts, nextPostsCursor, onLoadMorePosts],
+  )
 
   useEffect(() => {
     if (!open) {
@@ -213,8 +243,15 @@ export function ProfilePostLightbox({
         return
       }
 
-      if (event.key === 'ArrowRight' && nextPostId) {
-        onOpenPost(nextPostId)
+      if (event.key === 'ArrowRight') {
+        if (nextPostId) {
+          onOpenPost(nextPostId)
+          return
+        }
+
+        if (canLoadMorePosts) {
+          void handleLoadMorePosts(true)
+        }
       }
     }
 
@@ -222,7 +259,7 @@ export function ProfilePostLightbox({
     return () => {
       window.removeEventListener('keydown', handleEscape)
     }
-  }, [nextPostId, onClose, onOpenPost, open, previousPostId])
+  }, [canLoadMorePosts, handleLoadMorePosts, nextPostId, onClose, onOpenPost, open, previousPostId])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -310,6 +347,59 @@ export function ProfilePostLightbox({
     })
   }, [activePostId, isMobileViewport, open])
 
+  useEffect(() => {
+    if (!pendingAdvanceAfterLoad) {
+      return
+    }
+
+    if (nextPostId) {
+      setPendingAdvanceAfterLoad(false)
+      onOpenPost(nextPostId)
+      return
+    }
+
+    if (!hasMorePosts) {
+      setPendingAdvanceAfterLoad(false)
+    }
+  }, [hasMorePosts, nextPostId, onOpenPost, pendingAdvanceAfterLoad])
+
+  useEffect(() => {
+    if (!open || !canLoadMorePosts || isLoadingMorePosts) {
+      return
+    }
+
+    if (currentIndex >= posts.length - 2) {
+      void handleLoadMorePosts(false)
+    }
+  }, [canLoadMorePosts, currentIndex, handleLoadMorePosts, isLoadingMorePosts, open, posts.length])
+
+  useEffect(() => {
+    if (!open || !isMobileViewport) {
+      return
+    }
+
+    const stripNode = mobileStripRef.current
+    if (!stripNode) {
+      return
+    }
+
+    const handleScroll = () => {
+      if (!canLoadMorePosts || isLoadingMorePosts) {
+        return
+      }
+
+      const remainingScroll = stripNode.scrollHeight - stripNode.scrollTop - stripNode.clientHeight
+      if (remainingScroll <= 240) {
+        void handleLoadMorePosts(false)
+      }
+    }
+
+    stripNode.addEventListener('scroll', handleScroll)
+    return () => {
+      stripNode.removeEventListener('scroll', handleScroll)
+    }
+  }, [canLoadMorePosts, handleLoadMorePosts, isLoadingMorePosts, isMobileViewport, open, posts.length])
+
   if (!open || !post) {
     return null
   }
@@ -391,7 +481,11 @@ export function ProfilePostLightbox({
             </div>
           </header>
 
-          <div className="profile-lightbox-mobile-strip" aria-label="Profile posts">
+          <div
+            ref={mobileStripRef}
+            className="profile-lightbox-mobile-strip"
+            aria-label="Profile posts"
+          >
             {posts.map((candidate) => {
               const candidateImageUrl = candidate.imageUrls[0] ?? null
               const candidateImageModelLabel = resolveImageModelLabel(candidate.hashtags)
@@ -510,12 +604,20 @@ export function ProfilePostLightbox({
               </button>
             ) : null}
 
-            {nextPostId ? (
+            {nextPostId || canLoadMorePosts ? (
               <button
                 type="button"
                 className="profile-lightbox-nav is-next"
-                onClick={() => onOpenPost(nextPostId)}
+                onClick={() => {
+                  if (nextPostId) {
+                    onOpenPost(nextPostId)
+                    return
+                  }
+
+                  void handleLoadMorePosts(true)
+                }}
                 aria-label="Next post"
+                disabled={isLoadingMorePosts}
               >
                 {'\u203A'}
               </button>

@@ -88,6 +88,13 @@ const SECOND_POST: UiPost = {
   imageUrls: ['https://cdn.example.com/post-2.jpg'],
 }
 
+const THIRD_POST: UiPost = {
+  ...POST,
+  id: 'post-3',
+  caption: 'third',
+  imageUrls: ['https://cdn.example.com/post-3.jpg'],
+}
+
 const COMMENT: UiComment = {
   id: 'comment-1',
   postId: POST.id,
@@ -530,6 +537,74 @@ describe('App browse reliability', () => {
     await waitFor(() => {
       expect(mockFetchPost).toHaveBeenCalledWith('post-2')
       expect(screen.getByText('second')).toBeTruthy()
+    })
+  })
+
+  it('loads more profile posts from the lightbox when navigation reaches the loaded end', async () => {
+    mockFetchExploreFeed.mockResolvedValue(
+      ok({
+        posts: [POST],
+        nextCursor: null,
+        hasMore: false,
+      }),
+    )
+    mockFetchProfilePosts
+      .mockResolvedValueOnce(
+        ok({
+          posts: [POST, SECOND_POST],
+          nextCursor: 'cursor-2',
+          hasMore: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        ok({
+          posts: [THIRD_POST],
+          nextCursor: null,
+          hasMore: false,
+        }),
+      )
+    mockFetchPost.mockImplementation(async (postId) => {
+      if (postId === SECOND_POST.id) {
+        return ok(SECOND_POST)
+      }
+      if (postId === THIRD_POST.id) {
+        return ok(THIRD_POST)
+      }
+      return ok(POST)
+    })
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: 'Open profile for agent_one' }).length).toBeGreaterThan(0)
+    })
+    fireEvent.click(screen.getAllByRole('button', { name: 'Open profile for agent_one' })[0])
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open post post-1' })).toBeTruthy()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open post post-1' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Post viewer' })).toBeTruthy()
+    })
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(screen.getByText('second')).toBeTruthy()
+    })
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(mockFetchProfilePosts).toHaveBeenCalledWith('agent_one', {
+        limit: 20,
+        cursor: 'cursor-2',
+      })
+      expect(mockFetchPost).toHaveBeenCalledWith('post-3')
+      expect(screen.getByText('third')).toBeTruthy()
     })
   })
 

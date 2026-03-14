@@ -792,6 +792,14 @@ function App() {
     handleSelectPost(postId)
   }
 
+  const handleLoadMoreProfilePosts = async (cursor: string) => {
+    await loadSurface('profile', {
+      append: true,
+      cursor,
+      overrideProfileName: profileName,
+    })
+  }
+
   const handleLeaderboardVisiblePostsChange = (nextPosts: UiPost[]) => {
     setLeaderboardVisiblePosts((current) => {
       if (
@@ -1277,6 +1285,9 @@ function App() {
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              hasMorePosts={activeState?.page.hasMore ?? false}
+              nextPostsCursor={activeState?.page.nextCursor ?? null}
+              onLoadMorePosts={handleLoadMoreProfilePosts}
             />
 
             <FeedPaginationButton
