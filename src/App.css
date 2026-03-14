@@ -2159,10 +2159,10 @@ body,
 }
 
 .profile-lightbox {
-  --profile-lightbox-side-width: clamp(300px, 28vw, 380px);
+  --profile-lightbox-side-width: clamp(280px, 28vw, 400px);
   --profile-lightbox-frame-padding: clamp(0.75rem, 1.4vw, 1.1rem);
-  width: min(1480px, calc(100vw - 1rem));
-  height: min(960px, calc(100dvh - 1rem));
+  width: min(1280px, calc(100vw - 1rem));
+  height: min(860px, calc(100dvh - 1rem));
   max-height: calc(100dvh - 1rem);
   background: var(--cg-surface);
   border: 1px solid var(--cg-border);
@@ -2382,7 +2382,7 @@ body,
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(var(--profile-lightbox-side-width), 3fr);
+  grid-template-columns: minmax(0, 1fr) var(--profile-lightbox-side-width);
 }
 
 .profile-lightbox-mobile-shell {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties, SyntheticEvent } from 'react'
 import type { UiPost } from '../api/adapters'
 import type { CommentPageState } from '../app/shared'
 import { formatTimestamp } from '../app/shared'
@@ -8,6 +9,14 @@ const VERIFIED_BADGE = '\u2713'
 const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
 const CLOSE_ICON = '\u00D7'
 const BACK_ICON = '\u2039'
+const DESKTOP_LIGHTBOX_MAX_WIDTH = 1480
+const DESKTOP_LIGHTBOX_MAX_HEIGHT = 960
+const DESKTOP_LIGHTBOX_VIEWPORT_MARGIN = 16
+const DESKTOP_LIGHTBOX_MIN_SIDE_WIDTH = 280
+const DESKTOP_LIGHTBOX_MAX_SIDE_WIDTH = 400
+const DESKTOP_LIGHTBOX_MIN_FRAME_PADDING = 12
+const DESKTOP_LIGHTBOX_MAX_FRAME_PADDING = 18
+const DESKTOP_LIGHTBOX_STACK_BREAKPOINT = 1080
 
 type ProfilePostLightboxProps = {
   open: boolean
@@ -66,6 +75,82 @@ function toPossessiveLabel(value: string): string {
   return `${trimmed}'s posts`
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function calculateDesktopMediaPanelSize(
+  aspectRatio: number,
+  availableWidth: number,
+  availableHeight: number,
+  framePadding: number,
+) {
+  const contentMaxWidth = Math.max(1, availableWidth - framePadding * 2)
+  const contentMaxHeight = Math.max(1, availableHeight - framePadding * 2)
+
+  if (aspectRatio >= contentMaxWidth / contentMaxHeight) {
+    const contentWidth = contentMaxWidth
+    const contentHeight = contentWidth / aspectRatio
+    return {
+      mediaPanelWidth: contentWidth + framePadding * 2,
+      mediaPanelHeight: contentHeight + framePadding * 2,
+    }
+  }
+
+  const contentHeight = contentMaxHeight
+  const contentWidth = contentHeight * aspectRatio
+  return {
+    mediaPanelWidth: contentWidth + framePadding * 2,
+    mediaPanelHeight: contentHeight + framePadding * 2,
+  }
+}
+
+function buildDesktopLightboxStyle(
+  viewportWidth: number,
+  viewportHeight: number,
+  aspectRatio: number | null,
+): CSSProperties {
+  const safeAspectRatio = aspectRatio && Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 1
+  const maxDialogWidth = Math.min(
+    DESKTOP_LIGHTBOX_MAX_WIDTH,
+    Math.max(720, viewportWidth - DESKTOP_LIGHTBOX_VIEWPORT_MARGIN),
+  )
+  const maxDialogHeight = Math.min(
+    DESKTOP_LIGHTBOX_MAX_HEIGHT,
+    Math.max(520, viewportHeight - DESKTOP_LIGHTBOX_VIEWPORT_MARGIN),
+  )
+  const framePadding = clampNumber(
+    viewportWidth * 0.014,
+    DESKTOP_LIGHTBOX_MIN_FRAME_PADDING,
+    DESKTOP_LIGHTBOX_MAX_FRAME_PADDING,
+  )
+  const baseSideWidth = clampNumber(maxDialogWidth * 0.28, DESKTOP_LIGHTBOX_MIN_SIDE_WIDTH, DESKTOP_LIGHTBOX_MAX_SIDE_WIDTH)
+  const initialMediaSize = calculateDesktopMediaPanelSize(
+    safeAspectRatio,
+    maxDialogWidth - baseSideWidth,
+    maxDialogHeight,
+    framePadding,
+  )
+  const computedSideWidth = clampNumber(
+    initialMediaSize.mediaPanelWidth * (3 / 7),
+    DESKTOP_LIGHTBOX_MIN_SIDE_WIDTH,
+    DESKTOP_LIGHTBOX_MAX_SIDE_WIDTH,
+  )
+  const finalMediaSize = calculateDesktopMediaPanelSize(
+    safeAspectRatio,
+    maxDialogWidth - computedSideWidth,
+    maxDialogHeight,
+    framePadding,
+  )
+
+  return {
+    width: `${Math.min(maxDialogWidth, finalMediaSize.mediaPanelWidth + computedSideWidth)}px`,
+    height: `${Math.min(maxDialogHeight, finalMediaSize.mediaPanelHeight)}px`,
+    ['--profile-lightbox-side-width' as string]: `${computedSideWidth}px`,
+    ['--profile-lightbox-frame-padding' as string]: `${framePadding}px`,
+  }
+}
+
 export function ProfilePostLightbox({
   open,
   posts,
@@ -78,6 +163,14 @@ export function ProfilePostLightbox({
   onOpenAuthorProfile,
 }: ProfilePostLightboxProps) {
   const mobileCardRefs = useRef<Record<string, HTMLElement | null>>({})
+  const [viewportSize, setViewportSize] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { width: 1440, height: 900 }
+    }
+
+    return { width: window.innerWidth, height: window.innerHeight }
+  })
+  const [desktopImageAspectRatio, setDesktopImageAspectRatio] = useState<number | null>(null)
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
       return false
@@ -90,6 +183,7 @@ export function ProfilePostLightbox({
   const previousPostId = currentIndex > 0 ? posts[currentIndex - 1]?.id ?? null : null
   const nextPostId =
     currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1]?.id ?? null : null
+  const imageUrl = post?.imageUrls[0] ?? null
 
   useEffect(() => {
     if (!open) {
@@ -136,14 +230,67 @@ export function ProfilePostLightbox({
     }
 
     const handleResize = () => {
-      setIsMobileViewport(window.innerWidth <= 760)
+      const nextWidth = window.innerWidth
+      const nextHeight = window.innerHeight
+      setViewportSize((current) => {
+        if (current.width === nextWidth && current.height === nextHeight) {
+          return current
+        }
+
+        return { width: nextWidth, height: nextHeight }
+      })
+      setIsMobileViewport(nextWidth <= 760)
     }
 
+    handleResize()
     window.addEventListener('resize', handleResize)
     return () => {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
+
+  useEffect(() => {
+    if (!open || isMobileViewport || !imageUrl) {
+      return
+    }
+
+    let cancelled = false
+    const probeImage = new window.Image()
+
+    const syncAspectRatio = () => {
+      if (cancelled) {
+        return
+      }
+
+      const { naturalWidth, naturalHeight } = probeImage
+      if (naturalWidth > 0 && naturalHeight > 0) {
+        setDesktopImageAspectRatio(naturalWidth / naturalHeight)
+        return
+      }
+
+      setDesktopImageAspectRatio(1)
+    }
+
+    const handleError = () => {
+      if (!cancelled) {
+        setDesktopImageAspectRatio(1)
+      }
+    }
+
+    probeImage.addEventListener('load', syncAspectRatio)
+    probeImage.addEventListener('error', handleError)
+    probeImage.src = imageUrl
+
+    if (probeImage.complete) {
+      syncAspectRatio()
+    }
+
+    return () => {
+      cancelled = true
+      probeImage.removeEventListener('load', syncAspectRatio)
+      probeImage.removeEventListener('error', handleError)
+    }
+  }, [imageUrl, isMobileViewport, open])
 
   useEffect(() => {
     if (!open || !activePostId || !isMobileViewport) {
@@ -167,8 +314,18 @@ export function ProfilePostLightbox({
     return null
   }
 
-  const imageUrl = post.imageUrls[0] ?? null
   const imageModelLabel = resolveImageModelLabel(post.hashtags)
+  const desktopLightboxStyle =
+    !isMobileViewport && viewportSize.width > DESKTOP_LIGHTBOX_STACK_BREAKPOINT
+      ? buildDesktopLightboxStyle(viewportSize.width, viewportSize.height, desktopImageAspectRatio)
+      : undefined
+
+  const handleDesktopImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      setDesktopImageAspectRatio(naturalWidth / naturalHeight)
+    }
+  }
 
   return (
     <div className="profile-lightbox-backdrop" role="presentation" onClick={onClose}>
@@ -186,6 +343,7 @@ export function ProfilePostLightbox({
         role="dialog"
         aria-modal="true"
         aria-label="Post viewer"
+        style={desktopLightboxStyle}
         onClick={(event) => event.stopPropagation()}
       >
         {isMobileViewport ? (
@@ -330,7 +488,12 @@ export function ProfilePostLightbox({
           <div className="profile-lightbox-media-panel">
             <div className="profile-lightbox-media-frame">
               {imageUrl ? (
-                <img src={imageUrl} alt={post.altText || post.caption || 'Post media'} loading="lazy" />
+                <img
+                  src={imageUrl}
+                  alt={post.altText || post.caption || 'Post media'}
+                  loading="lazy"
+                  onLoad={handleDesktopImageLoad}
+                />
               ) : (
                 <div className="profile-lightbox-media-empty">No media available</div>
               )}
