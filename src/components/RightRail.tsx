@@ -5,6 +5,11 @@ import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 
 const VERIFIED_BADGE = '\u2713'
+const RAIL_VIEWPORT_MARGIN = 32
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
 
 type RightRailProps = {
   posts: UiPost[]
@@ -132,8 +137,14 @@ export function RightRail({
   onSelectHashtag,
   onOpenAuthorProfile,
 }: RightRailProps) {
+  const viewportRef = useRef<HTMLDivElement | null>(null)
   const stackRef = useRef<HTMLDivElement | null>(null)
+  const maxOffsetRef = useRef(0)
+  const previousScrollYRef = useRef(0)
+  const frameRef = useRef<number | null>(null)
+  const [viewportHeight, setViewportHeight] = useState(0)
   const [stackHeight, setStackHeight] = useState(0)
+  const [scrollOffset, setScrollOffset] = useState(0)
   const leaderboard = buildLeaderboard(posts)
   const trendingTags = buildTrendingTags(posts)
   const activeAgents = buildActiveAgents(posts)
@@ -143,154 +154,222 @@ export function RightRail({
     : hasError
       ? 'Some feeds failed to load. Rankings reflect available data.'
       : null
+  const maxOffset = Math.max(0, stackHeight - viewportHeight)
+  const clampedOffset = clamp(scrollOffset, 0, maxOffset)
 
   useEffect(() => {
+    const viewportNode = viewportRef.current
     const stackNode = stackRef.current
-    if (!stackNode) {
+    if (!viewportNode || !stackNode) {
       return
     }
 
-    const syncHeight = () => {
-      const nextHeight = Math.ceil(stackNode.getBoundingClientRect().height)
-      setStackHeight((current) => (current === nextHeight ? current : nextHeight))
+    const syncMeasurements = () => {
+      const nextViewportHeight = Math.max(0, Math.floor(viewportNode.getBoundingClientRect().height))
+      const nextStackHeight = Math.ceil(stackNode.getBoundingClientRect().height)
+      setViewportHeight((current) => (current === nextViewportHeight ? current : nextViewportHeight))
+      setStackHeight((current) => (current === nextStackHeight ? current : nextStackHeight))
     }
 
-    syncHeight()
+    syncMeasurements()
 
     if (typeof ResizeObserver === 'undefined') {
-      return
+      const handleResize = () => {
+        syncMeasurements()
+      }
+
+      window.addEventListener('resize', handleResize)
+
+      return () => {
+        window.removeEventListener('resize', handleResize)
+      }
     }
 
     const observer = new ResizeObserver(() => {
-      syncHeight()
+      syncMeasurements()
     })
+    observer.observe(viewportNode)
     observer.observe(stackNode)
 
+    const handleResize = () => {
+      syncMeasurements()
+    }
+
+    window.addEventListener('resize', handleResize)
+
     return () => {
+      window.removeEventListener('resize', handleResize)
       observer.disconnect()
     }
   }, [])
 
+  useEffect(() => {
+    maxOffsetRef.current = maxOffset
+  }, [maxOffset])
+
+  useEffect(() => {
+    previousScrollYRef.current = window.scrollY
+
+    const syncOffsetFromScroll = () => {
+      frameRef.current = null
+      const currentScrollY = window.scrollY
+      const delta = currentScrollY - previousScrollYRef.current
+      previousScrollYRef.current = currentScrollY
+      if (!delta) {
+        return
+      }
+
+      setScrollOffset((current) => clamp(current + delta, 0, maxOffsetRef.current))
+    }
+
+    const handleScroll = () => {
+      if (frameRef.current !== null) {
+        return
+      }
+      frameRef.current = window.requestAnimationFrame(syncOffsetFromScroll)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current)
+      }
+    }
+  }, [])
+
+  const viewportStyle = {
+    ['--right-rail-viewport-height' as string]: `max(0px, calc(100dvh - ${RAIL_VIEWPORT_MARGIN}px))`,
+  }
+  const stackStyle = {
+    transform: `translateY(-${clampedOffset}px)`,
+  }
+
   return (
-    <div
-      ref={stackRef}
-      className="right-rail-stack"
-      style={{ ['--right-rail-stack-height' as string]: `${stackHeight}px` }}
-    >
-      <Card className="right-rail-card">
-        <CardHeader className="right-rail-card-header">
-          <CardTitle>Leaderboard</CardTitle>
-          <Button type="button" className="right-rail-link" variant="outline" size="sm" onClick={onOpenLeaderboard}>
-            Open
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-          {!hasData && !statusText ? (
-            <CardDescription className="right-rail-empty">Load feed data to rank agents.</CardDescription>
-          ) : null}
-          <ol className="right-rail-list">
-            {leaderboard.map((entry, index) => (
-              <li key={entry.name}>
-                <div className="right-rail-agent-cell">
-                  <span className="right-rail-rank">{index + 1}.</span>
-                  {entry.avatarUrl ? (
-                    <img src={entry.avatarUrl} alt={`${entry.name} avatar`} className="right-rail-avatar" loading="lazy" />
-                  ) : (
-                    <span className="right-rail-avatar right-rail-avatar-fallback" aria-hidden="true">
-                      {entry.name[0]?.toUpperCase() ?? '?'}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    className="right-rail-agent-link"
-                    onClick={() => onOpenAuthorProfile(entry.name)}
-                    aria-label={`Open profile for ${entry.name}`}
-                  >
-                    {entry.name}
-                  </button>
-                  {entry.claimed ? (
-                    <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                      {VERIFIED_BADGE}
-                    </span>
-                  ) : null}
-                </div>
-                <Badge variant="outline">{entry.score}</Badge>
-              </li>
-            ))}
-          </ol>
-        </CardContent>
-      </Card>
+    <div ref={viewportRef} className="right-rail-viewport" style={viewportStyle}>
+      <div ref={stackRef} className="right-rail-stack" style={stackStyle}>
+        <Card className="right-rail-card">
+          <CardHeader className="right-rail-card-header">
+            <CardTitle>Leaderboard</CardTitle>
+            <Button
+              type="button"
+              className="right-rail-link"
+              variant="outline"
+              size="sm"
+              onClick={onOpenLeaderboard}
+            >
+              Open
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
+            {!hasData && !statusText ? (
+              <CardDescription className="right-rail-empty">Load feed data to rank agents.</CardDescription>
+            ) : null}
+            <ol className="right-rail-list">
+              {leaderboard.map((entry, index) => (
+                <li key={entry.name}>
+                  <div className="right-rail-agent-cell">
+                    <span className="right-rail-rank">{index + 1}.</span>
+                    {entry.avatarUrl ? (
+                      <img src={entry.avatarUrl} alt={`${entry.name} avatar`} className="right-rail-avatar" loading="lazy" />
+                    ) : (
+                      <span className="right-rail-avatar right-rail-avatar-fallback" aria-hidden="true">
+                        {entry.name[0]?.toUpperCase() ?? '?'}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="right-rail-agent-link"
+                      onClick={() => onOpenAuthorProfile(entry.name)}
+                      aria-label={`Open profile for ${entry.name}`}
+                    >
+                      {entry.name}
+                    </button>
+                    {entry.claimed ? (
+                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                        {VERIFIED_BADGE}
+                      </span>
+                    ) : null}
+                  </div>
+                  <Badge variant="outline">{entry.score}</Badge>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
 
-      <Card className="right-rail-card">
-        <CardHeader>
-          <CardTitle>Trending tags</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-          {!hasData && !statusText ? (
-            <CardDescription className="right-rail-empty">Hashtags appear after feed posts load.</CardDescription>
-          ) : null}
-          <ul className="right-rail-list">
-            {trendingTags.map((entry) => (
-              <li key={entry.tag}>
-                <Button
-                  type="button"
-                  className="right-rail-link"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSelectHashtag(entry.tag)}
-                  aria-label={`Open hashtag ${entry.tag}`}
-                >
-                  #{entry.tag}
-                </Button>
-                <Badge variant="secondary">{entry.count}</Badge>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card className="right-rail-card">
-        <CardHeader>
-          <CardTitle>Active agents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-          {!hasData && !statusText ? (
-            <CardDescription className="right-rail-empty">Agent activity appears once posts are loaded.</CardDescription>
-          ) : null}
-          <ul className="right-rail-list">
-            {activeAgents.map((entry) => (
-              <li key={entry.name}>
-                <div className="right-rail-agent-cell">
-                  {entry.avatarUrl ? (
-                    <img src={entry.avatarUrl} alt={`${entry.name} avatar`} className="right-rail-avatar" loading="lazy" />
-                  ) : (
-                    <span className="right-rail-avatar right-rail-avatar-fallback" aria-hidden="true">
-                      {entry.name[0]?.toUpperCase() ?? '?'}
-                    </span>
-                  )}
-                  <button
+        <Card className="right-rail-card">
+          <CardHeader>
+            <CardTitle>Trending tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
+            {!hasData && !statusText ? (
+              <CardDescription className="right-rail-empty">Hashtags appear after feed posts load.</CardDescription>
+            ) : null}
+            <ul className="right-rail-list">
+              {trendingTags.map((entry) => (
+                <li key={entry.tag}>
+                  <Button
                     type="button"
-                    className="right-rail-agent-link"
-                    onClick={() => onOpenAuthorProfile(entry.name)}
-                    aria-label={`Open profile for ${entry.name}`}
+                    className="right-rail-link"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSelectHashtag(entry.tag)}
+                    aria-label={`Open hashtag ${entry.tag}`}
                   >
-                    {entry.name}
-                  </button>
-                  {entry.claimed ? (
-                    <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                      {VERIFIED_BADGE}
-                    </span>
-                  ) : null}
-                </div>
-                <Badge variant="outline">{entry.posts} posts</Badge>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+                    #{entry.tag}
+                  </Button>
+                  <Badge variant="secondary">{entry.count}</Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="right-rail-card">
+          <CardHeader>
+            <CardTitle>Active agents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
+            {!hasData && !statusText ? (
+              <CardDescription className="right-rail-empty">Agent activity appears once posts are loaded.</CardDescription>
+            ) : null}
+            <ul className="right-rail-list">
+              {activeAgents.map((entry) => (
+                <li key={entry.name}>
+                  <div className="right-rail-agent-cell">
+                    {entry.avatarUrl ? (
+                      <img src={entry.avatarUrl} alt={`${entry.name} avatar`} className="right-rail-avatar" loading="lazy" />
+                    ) : (
+                      <span className="right-rail-avatar right-rail-avatar-fallback" aria-hidden="true">
+                        {entry.name[0]?.toUpperCase() ?? '?'}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="right-rail-agent-link"
+                      onClick={() => onOpenAuthorProfile(entry.name)}
+                      aria-label={`Open profile for ${entry.name}`}
+                    >
+                      {entry.name}
+                    </button>
+                    {entry.claimed ? (
+                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                        {VERIFIED_BADGE}
+                      </span>
+                    ) : null}
+                  </div>
+                  <Badge variant="outline">{entry.posts} posts</Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

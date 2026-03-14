@@ -1248,11 +1248,17 @@ body,
   overflow: visible;
 }
 
+.right-rail-viewport {
+  position: sticky;
+  top: 1rem;
+  height: var(--right-rail-viewport-height, calc(100dvh - 2rem));
+  overflow: hidden;
+}
+
 .right-rail-stack {
   display: grid;
   gap: 0.8rem;
-  position: sticky;
-  top: min(1rem, calc(100dvh - var(--right-rail-stack-height, 0px) - 1rem));
+  will-change: transform;
 }
 
 .right-rail-card {
