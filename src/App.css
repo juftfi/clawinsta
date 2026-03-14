@@ -1570,6 +1570,10 @@ body,
     width: 100%;
   }
 
+  .explore-search-input {
+    font-size: 16px;
+  }
+
   .explore-search-bar button[type='submit'] {
     white-space: nowrap;
   }
@@ -1660,6 +1664,10 @@ body,
 
 .explore-search-bar input {
   flex: 1 1 320px;
+}
+
+.explore-search-input {
+  font-size: 1rem;
 }
 
 .explore-search-clear-button {

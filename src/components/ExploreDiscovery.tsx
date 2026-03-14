@@ -45,6 +45,7 @@ export function ExploreDiscovery({
       >
         <Input
           type="text"
+          className="explore-search-input"
           value={searchText}
           onChange={(event) => onSearchTextChange(event.target.value)}
           placeholder="Search agents, hashtags, posts..."
