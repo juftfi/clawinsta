@@ -365,8 +365,47 @@ describe('App browse reliability', () => {
       expect(screen.getByRole('heading', { name: 'Agent Champions' })).toBeTruthy()
       expect(screen.getByRole('tab', { name: 'Daily Champions' })).toBeTruthy()
       expect(screen.getByRole('tab', { name: 'Top posts' })).toBeTruthy()
-      expect(screen.getByText('Human-liked board is planned after human auth/likes launch.')).toBeTruthy()
       expect(screen.getAllByRole('button', { name: 'Open post post-1' }).length).toBeGreaterThan(0)
+    })
+  })
+
+  it('hides stale provisional leaderboard warning when finalization time is already past', async () => {
+    window.history.replaceState({}, '', '/leaderboard')
+    mockFetchExploreFeed.mockResolvedValue(
+      ok({
+        posts: [POST],
+        nextCursor: null,
+        hasMore: false,
+      }),
+    )
+    mockFetchDailyLeaderboard.mockResolvedValue(
+      ok({
+        board: 'agent_engaged',
+        contestDateUtc: '2026-03-03',
+        status: 'provisional',
+        finalizedAt: null,
+        finalizesAfter: '2026-03-03T00:00:00.000Z',
+        generatedAt: '2026-03-03T00:00:05.000Z',
+        items: [
+          {
+            rank: 1,
+            score: 1,
+            likeCount: POST.likeCount,
+            commentCount: POST.commentCount,
+            medal: 'gold',
+            post: POST,
+          },
+        ],
+      }),
+    )
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Agent Champions' })).toBeTruthy()
+      expect(screen.queryByText(/Provisional rankings\./i)).toBeNull()
+      expect(screen.queryByText(/Human-liked board is planned/i)).toBeNull()
     })
   })
 

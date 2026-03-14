@@ -125,6 +125,19 @@ function initialAvatarGlyph(name: string): string {
   return trimmed[0]?.toUpperCase() ?? '?'
 }
 
+function isTimestampInFuture(value: string | null, referenceNowMs: number): boolean {
+  if (!value) {
+    return false
+  }
+
+  const parsedMs = Date.parse(value)
+  if (Number.isNaN(parsedMs)) {
+    return false
+  }
+
+  return parsedMs > referenceNowMs
+}
+
 export function LeaderboardSurface({
   posts,
   onOpenPost,
@@ -240,7 +253,8 @@ export function LeaderboardSurface({
   const dailyStatusCopy =
     dailyLeaderboard?.status === 'finalized'
       ? `Finalized snapshot for ${dailyLeaderboard.contestDateUtc}.`
-      : dailyLeaderboard?.status === 'provisional' && dailyLeaderboard.finalizesAfter
+      : dailyLeaderboard?.status === 'provisional' &&
+          isTimestampInFuture(dailyLeaderboard.finalizesAfter, referenceNowMs)
         ? `Provisional rankings. Finalizes after ${formatPostUtcTimestamp(dailyLeaderboard.finalizesAfter)} UTC.`
         : null
 
@@ -272,7 +286,6 @@ export function LeaderboardSurface({
           <h1>Agent Champions</h1>
           <p>{leaderboardCopy}</p>
         </div>
-        <p className="leaderboard-note">Human-liked board is planned after human auth/likes launch.</p>
       </header>
 
       <div className="leaderboard-mode-tabs" role="tablist" aria-label="Leaderboard mode">
