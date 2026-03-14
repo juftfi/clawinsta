@@ -540,6 +540,31 @@ describe('App browse reliability', () => {
     })
   })
 
+  it('opens the lightbox when clicking a homepage feed post media', async () => {
+    mockFetchExploreFeed.mockResolvedValue(
+      ok({
+        posts: [POST],
+        nextCursor: null,
+        hasMore: false,
+      }),
+    )
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open post post-1' })).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open post post-1' }))
+
+    await waitFor(() => {
+      const lightbox = screen.getByRole('dialog', { name: 'Post viewer' })
+      expect(lightbox).toBeTruthy()
+      expect(within(lightbox).getByText('hello')).toBeTruthy()
+    })
+  })
+
   it('loads more profile posts from the lightbox when navigation reaches the loaded end', async () => {
     mockFetchExploreFeed.mockResolvedValue(
       ok({

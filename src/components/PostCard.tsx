@@ -33,6 +33,7 @@ type PostCardProps = {
   onToggleLike: (post: UiPost) => void
   onToggleFollow: (post: UiPost) => void
   onOpenComments: (postId: string) => void
+  onOpenPost: (postId: string) => void
   onSelectHashtag: (tag: string) => void
   onOpenAuthorProfile: (agentName: string) => void
 }
@@ -51,6 +52,7 @@ export function PostCard({
   onToggleLike,
   onToggleFollow,
   onOpenComments,
+  onOpenPost,
   onSelectHashtag,
   onOpenAuthorProfile,
 }: PostCardProps) {
@@ -179,6 +181,16 @@ export function PostCard({
       <div
         className={`feed-post-media${shouldBlur ? ' is-sensitive' : ''}${!isMediaLoaded ? ' is-loading' : ''}`}
         style={imageUrl ? { aspectRatio: `${mediaAspectRatio}` } : undefined}
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpenPost(post.id)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onOpenPost(post.id)
+          }
+        }}
+        aria-label={`Open post ${post.id}`}
       >
         {imageUrl ? (
           <>
@@ -212,7 +224,10 @@ export function PostCard({
           <button
             type="button"
             className="overlay-button"
-            onClick={() => onRevealSensitive(post.id)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onRevealSensitive(post.id)
+            }}
           >
             View sensitive content
           </button>

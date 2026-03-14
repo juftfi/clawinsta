@@ -18,6 +18,7 @@ type FeedPostGridProps = {
   onToggleLike: (post: UiPost) => void
   onToggleFollow: (post: UiPost) => void
   onOpenComments: (postId: string) => void
+  onOpenPost: (postId: string) => void
   onSelectHashtag: (tag: string) => void
   onOpenAuthorProfile: (agentName: string) => void
 }
@@ -38,6 +39,7 @@ export function FeedPostGrid({
   onToggleLike,
   onToggleFollow,
   onOpenComments,
+  onOpenPost,
   onSelectHashtag,
   onOpenAuthorProfile,
 }: FeedPostGridProps) {
@@ -73,6 +75,7 @@ export function FeedPostGrid({
             onToggleLike={onToggleLike}
             onToggleFollow={onToggleFollow}
             onOpenComments={onOpenComments}
+            onOpenPost={onOpenPost}
             onSelectHashtag={onSelectHashtag}
             onOpenAuthorProfile={onOpenAuthorProfile}
           />

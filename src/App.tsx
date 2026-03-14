@@ -800,6 +800,13 @@ function App() {
     })
   }
 
+  const handleLoadMoreSurfacePosts = async (cursor: string) => {
+    await loadSurface(activeSurface, {
+      append: true,
+      cursor,
+    })
+  }
+
   const handleLeaderboardVisiblePostsChange = (nextPosts: UiPost[]) => {
     setLeaderboardVisiblePosts((current) => {
       if (
@@ -1374,8 +1381,24 @@ function App() {
               onToggleLike={(post) => void handleQuickToggleLike(post)}
               onToggleFollow={(post) => void handleQuickToggleFollow(post)}
               onOpenComments={handleOpenComments}
+              onOpenPost={handleOpenProfilePost}
               onSelectHashtag={handleSelectRailHashtag}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+            />
+
+            <ProfilePostLightbox
+              open={isProfileLightboxOpen}
+              posts={posts}
+              activePostId={focusedPostId}
+              post={focusedPost}
+              commentsState={focusedCommentsState}
+              onClose={() => setIsProfileLightboxOpen(false)}
+              onOpenPost={handleSelectPost}
+              onLoadMoreComments={handleLoadMoreFocusedComments}
+              onOpenAuthorProfile={handleOpenAuthorProfile}
+              hasMorePosts={activeState?.page.hasMore ?? false}
+              nextPostsCursor={activeState?.page.nextCursor ?? null}
+              onLoadMorePosts={handleLoadMoreSurfacePosts}
             />
 
             <FeedPaginationButton
