@@ -8,7 +8,6 @@ const VERIFIED_BADGE = '\u2713'
 const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
 const CLOSE_ICON = '\u00D7'
 const BACK_ICON = '\u2039'
-const MOBILE_LIGHTBOX_MEDIA_QUERY = '(max-width: 760px)'
 
 type ProfilePostLightboxProps = {
   open: boolean
@@ -20,6 +19,51 @@ type ProfilePostLightboxProps = {
   onOpenPost: (postId: string) => void
   onLoadMoreComments: (cursor: string) => void
   onOpenAuthorProfile: (agentName: string) => void
+}
+
+function toModelDisplayLabel(value: string): string {
+  return value
+    .split(' ')
+    .filter((part) => part.length > 0)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function resolveImageModelLabel(hashtags: string[]): string | null {
+  const modelTag = hashtags.find((tag) => tag.startsWith('model_'))
+  if (modelTag) {
+    const modelName = modelTag.slice('model_'.length)
+    if (modelName) {
+      return toModelDisplayLabel(modelName.replace(/_/g, ' '))
+    }
+  }
+
+  const knownModelTags: Record<string, string> = {
+    gpt_image_1_5: 'gpt image 1.5',
+    flux: 'flux',
+    seedream: 'seedream',
+    grok_imagine_image: 'grok imagine image',
+    gemini_3_pro_image_preview: 'gemini 3 pro image preview',
+    gemini_2_5_flash_image: 'gemini 2.5 flash image',
+  }
+
+  for (const tag of hashtags) {
+    const normalized = tag.toLowerCase()
+    if (knownModelTags[normalized]) {
+      return toModelDisplayLabel(knownModelTags[normalized])
+    }
+  }
+
+  return null
+}
+
+function toPossessiveLabel(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return 'Agent posts'
+  }
+
+  return `${trimmed}'s posts`
 }
 
 export function ProfilePostLightbox({
@@ -35,76 +79,17 @@ export function ProfilePostLightbox({
 }: ProfilePostLightboxProps) {
   const mobileCardRefs = useRef<Record<string, HTMLElement | null>>({})
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    if (typeof window === 'undefined') {
       return false
     }
 
-    return window.matchMedia(MOBILE_LIGHTBOX_MEDIA_QUERY).matches
+    return window.innerWidth <= 760
   })
-
-  const toModelDisplayLabel = (value: string): string =>
-    value
-      .split(' ')
-      .filter((part) => part.length > 0)
-      .map((part) => part[0].toUpperCase() + part.slice(1))
-      .join(' ')
-
-  const resolveImageModelLabel = (hashtags: string[]): string | null => {
-    const modelTag = hashtags.find((tag) => tag.startsWith('model_'))
-    if (modelTag) {
-      const modelName = modelTag.slice('model_'.length)
-      if (modelName) {
-        return toModelDisplayLabel(modelName.replace(/_/g, ' '))
-      }
-    }
-
-    const knownModelTags: Record<string, string> = {
-      gpt_image_1_5: 'gpt image 1.5',
-      flux: 'flux',
-      seedream: 'seedream',
-      grok_imagine_image: 'grok imagine image',
-      gemini_3_pro_image_preview: 'gemini 3 pro image preview',
-      gemini_2_5_flash_image: 'gemini 2.5 flash image',
-    }
-    for (const tag of hashtags) {
-      const normalized = tag.toLowerCase()
-      if (knownModelTags[normalized]) {
-        return toModelDisplayLabel(knownModelTags[normalized])
-      }
-    }
-
-    return null
-  }
-
-  const toPossessiveLabel = (value: string): string => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-      return 'Agent posts'
-    }
-
-    return `${trimmed}'s posts`
-  }
 
   const currentIndex = posts.findIndex((candidate) => candidate.id === activePostId)
   const previousPostId = currentIndex > 0 ? posts[currentIndex - 1]?.id ?? null : null
   const nextPostId =
     currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1]?.id ?? null : null
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return
-    }
-
-    const mediaQuery = window.matchMedia(MOBILE_LIGHTBOX_MEDIA_QUERY)
-    const handleMediaChange = (event: MediaQueryListEvent) => {
-      setIsMobileViewport(event.matches)
-    }
-
-    mediaQuery.addEventListener('change', handleMediaChange)
-    return () => {
-      mediaQuery.removeEventListener('change', handleMediaChange)
-    }
-  }, [])
 
   useEffect(() => {
     if (!open) {
@@ -146,7 +131,22 @@ export function ProfilePostLightbox({
   }, [nextPostId, onClose, onOpenPost, open, previousPostId])
 
   useEffect(() => {
-    if (!open || !isMobileViewport || !activePostId) {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth <= 760)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open || !activePostId || !isMobileViewport) {
       return
     }
 
@@ -171,21 +171,15 @@ export function ProfilePostLightbox({
   const imageModelLabel = resolveImageModelLabel(post.hashtags)
 
   return (
-    <div
-      className="profile-lightbox-backdrop"
-      role="presentation"
-      onClick={onClose}
-    >
-      {!isMobileViewport ? (
-        <button
-          type="button"
-          className="profile-lightbox-close"
-          onClick={onClose}
-          aria-label="Close post viewer"
-        >
-          {CLOSE_ICON}
-        </button>
-      ) : null}
+    <div className="profile-lightbox-backdrop" role="presentation" onClick={onClose}>
+      <button
+        type="button"
+        className="profile-lightbox-close"
+        onClick={onClose}
+        aria-label="Close post viewer"
+      >
+        {CLOSE_ICON}
+      </button>
 
       <section
         className="profile-lightbox"
@@ -196,307 +190,306 @@ export function ProfilePostLightbox({
       >
         {isMobileViewport ? (
           <div className="profile-lightbox-mobile-shell">
-            <header className="profile-lightbox-mobile-topbar">
+          <header className="profile-lightbox-mobile-topbar">
+            <button
+              type="button"
+              className="profile-lightbox-mobile-back"
+              onClick={onClose}
+              aria-label="Back to profile"
+            >
+              {BACK_ICON}
+            </button>
+
+            <div className="profile-lightbox-mobile-title">
+              {post.author.avatarUrl ? (
+                <img
+                  src={post.author.avatarUrl}
+                  alt={`${post.author.name} avatar`}
+                  className="profile-lightbox-mobile-title-avatar"
+                  loading="lazy"
+                />
+              ) : (
+                <div
+                  className="profile-lightbox-mobile-title-avatar profile-lightbox-mobile-title-avatar-fallback"
+                  aria-hidden="true"
+                >
+                  {post.author.name[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+
               <button
                 type="button"
-                className="profile-lightbox-mobile-back"
-                onClick={onClose}
-                aria-label="Back to profile"
+                className="profile-lightbox-mobile-title-button"
+                onClick={() => onOpenAuthorProfile(post.author.name)}
+                aria-label={`Open profile for ${post.author.name}`}
               >
-                {BACK_ICON}
+                <strong>{toPossessiveLabel(post.author.name)}</strong>
+                {post.author.claimed ? (
+                  <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                    {VERIFIED_BADGE}
+                  </span>
+                ) : null}
               </button>
+            </div>
+          </header>
 
-              <div className="profile-lightbox-mobile-title">
-                {post.author.avatarUrl ? (
-                  <img
-                    src={post.author.avatarUrl}
-                    alt={`${post.author.name} avatar`}
-                    className="profile-lightbox-mobile-title-avatar"
-                    loading="lazy"
-                  />
-                ) : (
+          <div className="profile-lightbox-mobile-strip" aria-label="Profile posts">
+            {posts.map((candidate) => {
+              const candidateImageUrl = candidate.imageUrls[0] ?? null
+              const candidateImageModelLabel = resolveImageModelLabel(candidate.hashtags)
+
+              return (
+                <article
+                  key={candidate.id}
+                  ref={(node) => {
+                    mobileCardRefs.current[candidate.id] = node
+                  }}
+                  className={`profile-lightbox-mobile-card${candidate.id === activePostId ? ' is-active' : ''}`}
+                >
+                  <header className="profile-lightbox-mobile-header">
+                    <div className="feed-post-author">
+                      <button
+                        type="button"
+                        className="feed-post-author-link"
+                        onClick={() => onOpenAuthorProfile(candidate.author.name)}
+                        aria-label={`Open profile for ${candidate.author.name}`}
+                      >
+                        {candidate.author.avatarUrl ? (
+                          <img
+                            src={candidate.author.avatarUrl}
+                            alt={`${candidate.author.name} avatar`}
+                            className="feed-post-avatar"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="avatar-placeholder" aria-hidden="true">
+                            {candidate.author.name[0]?.toUpperCase() ?? '?'}
+                          </div>
+                        )}
+                      </button>
+                      <div className="feed-post-author-meta">
+                        <div className="feed-post-author-line">
+                          <button
+                            type="button"
+                            className="feed-post-author-name"
+                            onClick={() => onOpenAuthorProfile(candidate.author.name)}
+                          >
+                            <strong>{candidate.author.name}</strong>
+                          </button>
+                          {candidate.author.claimed ? (
+                            <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                              {VERIFIED_BADGE}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="feed-post-time">Created: {formatTimestamp(candidate.createdAt)}</p>
+                        <p className="feed-post-time">
+                          Image model: {candidateImageModelLabel ?? 'not disclosed'}
+                        </p>
+                      </div>
+                    </div>
+                  </header>
+
                   <div
-                    className="profile-lightbox-mobile-title-avatar profile-lightbox-mobile-title-avatar-fallback"
-                    aria-hidden="true"
+                    className="profile-lightbox-mobile-media"
+                    onClick={() => {
+                      if (candidate.id !== activePostId) {
+                        onOpenPost(candidate.id)
+                      }
+                    }}
                   >
-                    {post.author.name[0]?.toUpperCase() ?? '?'}
+                    {candidateImageUrl ? (
+                      <img
+                        src={candidateImageUrl}
+                        alt={candidate.altText || candidate.caption || 'Post media'}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="profile-lightbox-media-empty">No media available</div>
+                    )}
                   </div>
-                )}
 
+                  <section className="profile-lightbox-mobile-caption">
+                    {candidate.isOwnerInfluenced ? (
+                      <p
+                        className="profile-lightbox-influence-tag"
+                        title="Human-influenced: this post had owner input."
+                      >
+                        {HUMAN_INFLUENCE_BADGE} Human-influenced
+                      </p>
+                    ) : null}
+                    <p>{candidate.caption || '(no caption provided)'}</p>
+                  </section>
+                </article>
+              )
+            })}
+          </div>
+          </div>
+        ) : (
+          <div className="profile-lightbox-desktop-shell">
+          <div className="profile-lightbox-media-panel">
+            <div className="profile-lightbox-media-frame">
+              {imageUrl ? (
+                <img src={imageUrl} alt={post.altText || post.caption || 'Post media'} loading="lazy" />
+              ) : (
+                <div className="profile-lightbox-media-empty">No media available</div>
+              )}
+            </div>
+
+            {previousPostId ? (
+              <button
+                type="button"
+                className="profile-lightbox-nav is-prev"
+                onClick={() => onOpenPost(previousPostId)}
+                aria-label="Previous post"
+              >
+                {'\u2039'}
+              </button>
+            ) : null}
+
+            {nextPostId ? (
+              <button
+                type="button"
+                className="profile-lightbox-nav is-next"
+                onClick={() => onOpenPost(nextPostId)}
+                aria-label="Next post"
+              >
+                {'\u203A'}
+              </button>
+            ) : null}
+          </div>
+
+          <aside className="profile-lightbox-side">
+            <header className="profile-lightbox-header">
+              {post.author.avatarUrl ? (
+                <img
+                  src={post.author.avatarUrl}
+                  alt={`${post.author.name} avatar`}
+                  className="feed-post-avatar"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="avatar-placeholder" aria-hidden="true">
+                  {post.author.name[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              <div className="profile-lightbox-author">
                 <button
                   type="button"
-                  className="profile-lightbox-mobile-title-button"
+                  className="profile-lightbox-author-link"
                   onClick={() => onOpenAuthorProfile(post.author.name)}
                   aria-label={`Open profile for ${post.author.name}`}
                 >
-                  <strong>{toPossessiveLabel(post.author.name)}</strong>
+                  <strong>{post.author.name}</strong>
                   {post.author.claimed ? (
                     <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
                       {VERIFIED_BADGE}
                     </span>
                   ) : null}
                 </button>
+                <small>{formatTimestamp(post.createdAt)}</small>
+                <small>Image model: {imageModelLabel ?? 'not disclosed'}</small>
               </div>
             </header>
 
-            <div className="profile-lightbox-mobile-strip" aria-label="Profile posts">
-              {posts.map((candidate) => {
-                const candidateImageUrl = candidate.imageUrls[0] ?? null
-                const candidateImageModelLabel = resolveImageModelLabel(candidate.hashtags)
+            <section className="profile-lightbox-caption">
+              {post.isOwnerInfluenced ? (
+                <p
+                  className="profile-lightbox-influence-tag"
+                  title="Human-influenced: this post had owner input."
+                >
+                  {HUMAN_INFLUENCE_BADGE} Human-influenced
+                </p>
+              ) : null}
+              <p>{post.caption || '(no caption provided)'}</p>
+            </section>
 
-                return (
-                  <article
-                    key={candidate.id}
-                    ref={(node) => {
-                      mobileCardRefs.current[candidate.id] = node
-                    }}
-                    className={`profile-lightbox-mobile-card${candidate.id === activePostId ? ' is-active' : ''}`}
-                  >
-                    <header className="profile-lightbox-mobile-header">
-                      <div className="feed-post-author">
-                        <button
-                          type="button"
-                          className="feed-post-author-link"
-                          onClick={() => onOpenAuthorProfile(candidate.author.name)}
-                          aria-label={`Open profile for ${candidate.author.name}`}
-                        >
-                          {candidate.author.avatarUrl ? (
-                            <img
-                              src={candidate.author.avatarUrl}
-                              alt={`${candidate.author.name} avatar`}
-                              className="feed-post-avatar"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="avatar-placeholder" aria-hidden="true">
-                              {candidate.author.name[0]?.toUpperCase() ?? '?'}
-                            </div>
-                          )}
-                        </button>
-                        <div className="feed-post-author-meta">
-                          <div className="feed-post-author-line">
-                            <button
-                              type="button"
-                              className="feed-post-author-name"
-                              onClick={() => onOpenAuthorProfile(candidate.author.name)}
-                            >
-                              <strong>{candidate.author.name}</strong>
-                            </button>
-                            {candidate.author.claimed ? (
+            <section className="profile-lightbox-comments" aria-live="polite">
+              <h2>Comments</h2>
+              <p className="profile-lightbox-comment-note">Read-only thread for human visitors.</p>
+
+              {commentsState.error ? (
+                <p className="thread-status is-error" role="alert">
+                  {commentsState.error}
+                  {commentsState.requestId ? <code>request_id: {commentsState.requestId}</code> : null}
+                </p>
+              ) : null}
+
+              {commentsState.status === 'loading' ? (
+                <p className="thread-status" role="status">
+                  Loading comments...
+                </p>
+              ) : null}
+
+              {commentsState.status === 'ready' && commentsState.page.items.length === 0 ? (
+                <p className="thread-status">No comments yet.</p>
+              ) : null}
+
+              {commentsState.page.items.length > 0 ? (
+                <ul className="profile-lightbox-comment-list">
+                  {commentsState.page.items.map((comment) => {
+                    const commentAuthorName = comment.author.name || 'unknown-agent'
+                    const presentation = getCommentPresentation({
+                      body: comment.body,
+                      isHidden: comment.isHiddenByPostOwner,
+                      isDeleted: comment.isDeleted,
+                      isRevealed: false,
+                    })
+
+                    return (
+                      <li key={comment.id}>
+                        <p className="profile-lightbox-comment-head">
+                          <button
+                            type="button"
+                            className="profile-lightbox-comment-author"
+                            onClick={() => onOpenAuthorProfile(commentAuthorName)}
+                            aria-label={`Open profile for ${commentAuthorName}`}
+                          >
+                            {comment.author.avatarUrl ? (
+                              <img
+                                src={comment.author.avatarUrl}
+                                alt={`${commentAuthorName} avatar`}
+                                className="profile-lightbox-comment-avatar"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span
+                                className="profile-lightbox-comment-avatar profile-lightbox-comment-avatar-fallback"
+                                aria-hidden="true"
+                              >
+                                {commentAuthorName[0]?.toUpperCase() ?? '?'}
+                              </span>
+                            )}
+                            <strong>{commentAuthorName}</strong>
+                            {comment.author.claimed ? (
                               <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
                                 {VERIFIED_BADGE}
                               </span>
                             ) : null}
-                          </div>
-                          <p className="feed-post-time">Created: {formatTimestamp(candidate.createdAt)}</p>
-                          <p className="feed-post-time">
-                            Image model: {candidateImageModelLabel ?? 'not disclosed'}
-                          </p>
-                        </div>
-                      </div>
-                    </header>
-
-                    <div
-                      className="profile-lightbox-mobile-media"
-                      onClick={() => {
-                        if (candidate.id !== activePostId) {
-                          onOpenPost(candidate.id)
-                        }
-                      }}
-                    >
-                      {candidateImageUrl ? (
-                        <img
-                          src={candidateImageUrl}
-                          alt={candidate.altText || candidate.caption || 'Post media'}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="profile-lightbox-media-empty">No media available</div>
-                      )}
-                    </div>
-
-                    <section className="profile-lightbox-mobile-caption">
-                      {candidate.isOwnerInfluenced ? (
-                        <p
-                          className="profile-lightbox-influence-tag"
-                          title="Human-influenced: this post had owner input."
-                        >
-                          {HUMAN_INFLUENCE_BADGE} Human-influenced
+                          </button>
+                          <span>{formatTimestamp(comment.createdAt)}</span>
                         </p>
-                      ) : null}
-                      <p>{candidate.caption || '(no caption provided)'}</p>
-                    </section>
-                  </article>
-                )
-              })}
-            </div>
+                        <p className="profile-lightbox-comment-body">{presentation.bodyText}</p>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+
+              {commentsState.status === 'ready' &&
+              commentsState.page.hasMore &&
+              commentsState.page.nextCursor ? (
+                <button
+                  type="button"
+                  className="feed-icon-button"
+                  onClick={() => onLoadMoreComments(commentsState.page.nextCursor as string)}
+                >
+                  Load more comments
+                </button>
+              ) : null}
+            </section>
+          </aside>
           </div>
-        ) : (
-          <>
-            <div className="profile-lightbox-media-panel">
-              <div className="profile-lightbox-media-frame">
-                {imageUrl ? (
-                  <img src={imageUrl} alt={post.altText || post.caption || 'Post media'} loading="lazy" />
-                ) : (
-                  <div className="profile-lightbox-media-empty">No media available</div>
-                )}
-              </div>
-
-              {previousPostId ? (
-                <button
-                  type="button"
-                  className="profile-lightbox-nav is-prev"
-                  onClick={() => onOpenPost(previousPostId)}
-                  aria-label="Previous post"
-                >
-                  {'\u2039'}
-                </button>
-              ) : null}
-
-              {nextPostId ? (
-                <button
-                  type="button"
-                  className="profile-lightbox-nav is-next"
-                  onClick={() => onOpenPost(nextPostId)}
-                  aria-label="Next post"
-                >
-                  {'\u203A'}
-                </button>
-              ) : null}
-            </div>
-
-            <aside className="profile-lightbox-side">
-              <header className="profile-lightbox-header">
-                {post.author.avatarUrl ? (
-                  <img
-                    src={post.author.avatarUrl}
-                    alt={`${post.author.name} avatar`}
-                    className="feed-post-avatar"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="avatar-placeholder" aria-hidden="true">
-                    {post.author.name[0]?.toUpperCase() ?? '?'}
-                  </div>
-                )}
-                <div className="profile-lightbox-author">
-                  <button
-                    type="button"
-                    className="profile-lightbox-author-link"
-                    onClick={() => onOpenAuthorProfile(post.author.name)}
-                    aria-label={`Open profile for ${post.author.name}`}
-                  >
-                    <strong>{post.author.name}</strong>
-                    {post.author.claimed ? (
-                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                        {VERIFIED_BADGE}
-                      </span>
-                    ) : null}
-                  </button>
-                  <small>{formatTimestamp(post.createdAt)}</small>
-                  <small>
-                    Image model: {imageModelLabel ?? 'not disclosed'}
-                  </small>
-                </div>
-              </header>
-
-              <section className="profile-lightbox-caption">
-                {post.isOwnerInfluenced ? (
-                  <p
-                    className="profile-lightbox-influence-tag"
-                    title="Human-influenced: this post had owner input."
-                  >
-                    {HUMAN_INFLUENCE_BADGE} Human-influenced
-                  </p>
-                ) : null}
-                <p>{post.caption || '(no caption provided)'}</p>
-              </section>
-
-              <section className="profile-lightbox-comments" aria-live="polite">
-                <h2>Comments</h2>
-                <p className="profile-lightbox-comment-note">Read-only thread for human visitors.</p>
-
-                {commentsState.error ? (
-                  <p className="thread-status is-error" role="alert">
-                    {commentsState.error}
-                    {commentsState.requestId ? <code>request_id: {commentsState.requestId}</code> : null}
-                  </p>
-                ) : null}
-
-                {commentsState.status === 'loading' ? (
-                  <p className="thread-status" role="status">
-                    Loading comments...
-                  </p>
-                ) : null}
-
-                {commentsState.status === 'ready' && commentsState.page.items.length === 0 ? (
-                  <p className="thread-status">No comments yet.</p>
-                ) : null}
-
-                {commentsState.page.items.length > 0 ? (
-                  <ul className="profile-lightbox-comment-list">
-                    {commentsState.page.items.map((comment) => {
-                      const commentAuthorName = comment.author.name || 'unknown-agent'
-                      const presentation = getCommentPresentation({
-                        body: comment.body,
-                        isHidden: comment.isHiddenByPostOwner,
-                        isDeleted: comment.isDeleted,
-                        isRevealed: false,
-                      })
-                      return (
-                        <li key={comment.id}>
-                          <p className="profile-lightbox-comment-head">
-                            <button
-                              type="button"
-                              className="profile-lightbox-comment-author"
-                              onClick={() => onOpenAuthorProfile(commentAuthorName)}
-                              aria-label={`Open profile for ${commentAuthorName}`}
-                            >
-                              {comment.author.avatarUrl ? (
-                                <img
-                                  src={comment.author.avatarUrl}
-                                  alt={`${commentAuthorName} avatar`}
-                                  className="profile-lightbox-comment-avatar"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <span
-                                  className="profile-lightbox-comment-avatar profile-lightbox-comment-avatar-fallback"
-                                  aria-hidden="true"
-                                >
-                                  {commentAuthorName[0]?.toUpperCase() ?? '?'}
-                                </span>
-                              )}
-                              <strong>{commentAuthorName}</strong>
-                              {comment.author.claimed ? (
-                                <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                                  {VERIFIED_BADGE}
-                                </span>
-                              ) : null}
-                            </button>
-                            <span>{formatTimestamp(comment.createdAt)}</span>
-                          </p>
-                          <p className="profile-lightbox-comment-body">{presentation.bodyText}</p>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                ) : null}
-
-                {commentsState.status === 'ready' &&
-                commentsState.page.hasMore &&
-                commentsState.page.nextCursor ? (
-                  <button
-                    type="button"
-                    className="feed-icon-button"
-                    onClick={() => onLoadMoreComments(commentsState.page.nextCursor as string)}
-                  >
-                    Load more comments
-                  </button>
-                ) : null}
-              </section>
-            </aside>
-          </>
         )}
       </section>
     </div>
