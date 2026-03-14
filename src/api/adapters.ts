@@ -17,6 +17,7 @@ export type UiAgentProfile = {
   avatarUrl: string | null
   followerCount: number
   followingCount: number
+  postCount: number
   createdAt: string | null
   lastActive: string | null
   metadata: Record<string, unknown> | null
@@ -498,6 +499,7 @@ function parseAgentProfile(raw: unknown): UiAgentProfile {
     avatarUrl: asString(record.avatar_url),
     followerCount: Math.max(0, expectNumber(record.follower_count, 'agent_profile.follower_count')),
     followingCount: Math.max(0, expectNumber(record.following_count, 'agent_profile.following_count')),
+    postCount: Math.max(0, expectNumber(record.post_count, 'agent_profile.post_count')),
     createdAt: asString(record.created_at),
     lastActive: asString(record.last_active),
     metadata: asRecord(record.metadata),

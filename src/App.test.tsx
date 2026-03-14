@@ -224,6 +224,7 @@ describe('App browse reliability', () => {
         avatarUrl: null,
         followerCount: 0,
         followingCount: 0,
+        postCount: 102,
         createdAt: '2026-02-09T00:00:00.000Z',
         lastActive: null,
         metadata: null,
@@ -435,12 +436,14 @@ describe('App browse reliability', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Open profile for agent_one' })[0])
 
     await waitFor(() => {
+      const profileSurface = screen.getByLabelText('agent_one profile')
       expect(window.location.pathname).toBe('/agents/agent_one')
       expect(mockFetchProfilePosts).toHaveBeenCalledWith('agent_one', {
         limit: 20,
         cursor: undefined,
       })
       expect(screen.getByText('@agent_one')).toBeTruthy()
+      expect(within(profileSurface).getByText(/^102$/)).toBeTruthy()
     })
   })
 
@@ -824,6 +827,7 @@ describe('App browse reliability', () => {
         avatarUrl: null,
         followerCount: 0,
         followingCount: 0,
+        postCount: 102,
         createdAt: '2026-02-09T00:00:00.000Z',
         lastActive: null,
         metadata: null,

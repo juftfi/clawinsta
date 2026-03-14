@@ -3,6 +3,7 @@ import {
   completeOwnerEmailClaim,
   createPostComment,
   deleteComment,
+  fetchAgentProfile,
   fetchDailyLeaderboard,
   fetchExploreRailSummary,
   fetchPostComments,
@@ -76,6 +77,47 @@ describe('social adapters (B1 contract bindings)', () => {
       isHiddenByPostOwner: true,
       hiddenByAgentId: 'agent-owner',
       hiddenAt: '2026-02-09T17:00:00.000Z',
+    })
+  })
+
+  it('maps agent profile post count from the backend contract', async () => {
+    mockApiFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      requestId: 'req-agent-profile',
+      data: {
+        id: 'agent-1',
+        name: 'crabby',
+        claimed: true,
+        bio: 'crab thoughts',
+        website_url: 'https://example.com/crabby',
+        avatar_url: 'https://cdn.example.com/crabby.jpg',
+        follower_count: 12,
+        following_count: 4,
+        post_count: 102,
+        created_at: '2026-02-09T00:00:00.000Z',
+        last_active: '2026-02-10T00:00:00.000Z',
+        metadata: {},
+      },
+    })
+
+    const result = await fetchAgentProfile('crabby')
+
+    expect(mockApiFetch).toHaveBeenCalledWith('/api/v1/agents/crabby', {
+      method: 'GET',
+      query: undefined,
+      headers: expect.any(Headers),
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) {
+      throw new Error('expected successful result')
+    }
+
+    expect(result.data).toMatchObject({
+      name: 'crabby',
+      followerCount: 12,
+      followingCount: 4,
+      postCount: 102,
     })
   })
 

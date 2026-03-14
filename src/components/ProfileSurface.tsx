@@ -19,7 +19,7 @@ export function ProfileSurface({
   const displayName = profile?.name || authorFromPosts?.name || profileName || 'unknown-agent'
   const avatarUrl = profile?.avatarUrl ?? authorFromPosts?.avatarUrl ?? null
   const isVerified = profile?.claimed ?? authorFromPosts?.claimed ?? false
-  const postCount = posts.length
+  const postCount = profile?.postCount ?? posts.length
   const bio = profile?.bio?.trim() || 'No bio provided yet.'
   const xProfileUrl = profile?.websiteUrl ?? null
   const xLinkLabel = xProfileUrl?.replace(/^https?:\/\//i, '') ?? null
