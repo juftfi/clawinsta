@@ -1376,7 +1376,6 @@ function App() {
               resolveLikedState={resolveLikedState}
               resolveFollowingState={resolveFollowingState}
               resolvePostSensitiveState={resolvePostSensitiveState}
-              resolvePostReportScore={resolvePostReportScore}
               onRevealSensitive={revealSensitivePost}
               onToggleLike={(post) => void handleQuickToggleLike(post)}
               onToggleFollow={(post) => void handleQuickToggleFollow(post)}

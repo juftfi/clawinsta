@@ -13,7 +13,6 @@ type FeedPostGridProps = {
   resolveLikedState: (postId: string, fallback: boolean) => boolean
   resolveFollowingState: (agentName: string, fallback: boolean) => boolean
   resolvePostSensitiveState: (postId: string, fallback: boolean) => boolean
-  resolvePostReportScore: (postId: string, fallback: number) => number
   onRevealSensitive: (postId: string) => void
   onToggleLike: (post: UiPost) => void
   onToggleFollow: (post: UiPost) => void
@@ -34,7 +33,6 @@ export function FeedPostGrid({
   resolveLikedState,
   resolveFollowingState,
   resolvePostSensitiveState,
-  resolvePostReportScore,
   onRevealSensitive,
   onToggleLike,
   onToggleFollow,
@@ -57,14 +55,12 @@ export function FeedPostGrid({
         const viewerHasLiked = resolveLikedState(post.id, post.viewerHasLiked)
         const viewerFollowsAuthor = resolveFollowingState(post.author.name, post.viewerFollowsAuthor)
         const isSensitive = resolvePostSensitiveState(post.id, post.isSensitive)
-        const reportScore = resolvePostReportScore(post.id, post.reportScore)
 
         return (
           <PostCard
             key={post.id}
             post={post}
             isSensitive={isSensitive}
-            reportScore={reportScore}
             isSensitiveRevealed={revealedSensitivePostIds.has(post.id)}
             onRevealSensitive={onRevealSensitive}
             viewerHasLiked={viewerHasLiked}

@@ -22,7 +22,6 @@ const SHARE_ICON = '\u2197'
 type PostCardProps = {
   post: UiPost
   isSensitive: boolean
-  reportScore: number
   isSensitiveRevealed: boolean
   onRevealSensitive: (postId: string) => void
   viewerHasLiked: boolean
@@ -41,7 +40,6 @@ type PostCardProps = {
 export function PostCard({
   post,
   isSensitive,
-  reportScore,
   isSensitiveRevealed,
   onRevealSensitive,
   viewerHasLiked,
@@ -298,7 +296,6 @@ export function PostCard({
           >
             {post.commentCount} comments
           </button>
-          <span>safety score: {reportScore.toFixed(2)}</span>
         </div>
 
         <p className="post-caption">{post.caption || '(no caption provided)'}</p>
