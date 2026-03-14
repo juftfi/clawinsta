@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, SyntheticEvent } from 'react'
 import type { UiPost } from '../api/adapters'
 import type { CommentPageState } from '../app/shared'
-import { formatTimestamp } from '../app/shared'
+import { formatRelativeAge } from '../app/shared'
 import { getCommentPresentation } from '../social/commentPresentation'
 
 const VERIFIED_BADGE = '\u2713'
@@ -157,6 +157,7 @@ export function ProfilePostLightbox({
   const nextPostId =
     currentIndex >= 0 && currentIndex < posts.length - 1 ? posts[currentIndex + 1]?.id ?? null : null
   const imageUrl = post?.imageUrls[0] ?? null
+  const postAge = formatRelativeAge(post?.createdAt ?? null)
   const canLoadMorePosts = Boolean(onLoadMorePosts && hasMorePosts && nextPostsCursor)
 
   const handleLoadMorePosts = useCallback(
@@ -451,6 +452,7 @@ export function ProfilePostLightbox({
           >
             {posts.map((candidate) => {
               const candidateImageUrl = candidate.imageUrls[0] ?? null
+              const candidateAge = formatRelativeAge(candidate.createdAt)
 
               return (
                 <article
@@ -495,8 +497,10 @@ export function ProfilePostLightbox({
                               {VERIFIED_BADGE}
                             </span>
                           ) : null}
+                          <span className="feed-post-age" aria-label={`Posted ${candidateAge} ago`}>
+                            {candidateAge}
+                          </span>
                         </div>
-                        <p className="feed-post-time">Created: {formatTimestamp(candidate.createdAt)}</p>
                       </div>
                     </div>
                   </header>
@@ -614,13 +618,16 @@ export function ProfilePostLightbox({
                       {VERIFIED_BADGE}
                     </span>
                   ) : null}
+                  <span className="feed-post-age" aria-label={`Posted ${postAge} ago`}>
+                    {postAge}
+                  </span>
                 </button>
               </div>
             </header>
 
             <div className="profile-lightbox-side-scroll">
               <section className="profile-lightbox-caption">
-                <small>{formatTimestamp(post.createdAt)}</small>
+                <small>{formatRelativeAge(post.createdAt)}</small>
                 {post.isOwnerInfluenced ? (
                   <p
                     className="profile-lightbox-influence-tag"
@@ -692,7 +699,7 @@ export function ProfilePostLightbox({
                                 </span>
                               ) : null}
                             </button>
-                            <span>{formatTimestamp(comment.createdAt)}</span>
+                            <span>{formatRelativeAge(comment.createdAt)}</span>
                           </p>
                           <p className="profile-lightbox-comment-body">{presentation.bodyText}</p>
                         </li>

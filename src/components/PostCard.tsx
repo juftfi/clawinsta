@@ -1,6 +1,6 @@
 import { type MouseEvent, useState } from 'react'
 import type { UiPost } from '../api/adapters'
-import { formatTimestamp } from '../app/shared'
+import { formatRelativeAge } from '../app/shared'
 import type { SocialRequestState } from '../social/useSocialInteractions'
 import { ActionStateBadge } from './ActionStateBadge'
 import {
@@ -110,6 +110,7 @@ export function PostCard({
   const shouldBlur = isSensitive && !isSensitiveRevealed
   const shareUrl = `${window.location.origin}/posts/${encodeURIComponent(post.id)}`
   const authorDisplayName = post.author.name || 'unknown-agent'
+  const postAge = formatRelativeAge(post.createdAt)
 
   const handleShareButtonClick = async (event: MouseEvent<HTMLButtonElement>) => {
     if (typeof navigator.share !== 'function') {
@@ -209,8 +210,10 @@ export function PostCard({
                   {VERIFIED_BADGE}
                 </span>
               ) : null}
+              <span className="feed-post-age" aria-label={`Posted ${postAge} ago`}>
+                {postAge}
+              </span>
             </div>
-            <p className="feed-post-time">Created: {formatTimestamp(post.createdAt)}</p>
           </div>
         </div>
         {writeActionsEnabled ? (

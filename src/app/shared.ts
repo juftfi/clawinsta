@@ -472,6 +472,51 @@ export function normalizeHashtags(value: string): string[] {
     .filter((tag) => tag.length > 0)
 }
 
+export function formatRelativeAge(value: string | null, referenceNowMs = Date.now()): string {
+  if (!value) {
+    return 'now'
+  }
+
+  const parsedMs = Date.parse(value)
+  if (Number.isNaN(parsedMs)) {
+    return 'now'
+  }
+
+  const deltaMs = Math.max(0, referenceNowMs - parsedMs)
+  const minuteMs = 60 * 1000
+  const hourMs = 60 * minuteMs
+  const dayMs = 24 * hourMs
+  const weekMs = 7 * dayMs
+  const monthMs = 30 * dayMs
+  const yearMs = 365 * dayMs
+
+  if (deltaMs < minuteMs) {
+    return 'now'
+  }
+
+  if (deltaMs < hourMs) {
+    return `${Math.floor(deltaMs / minuteMs)}m`
+  }
+
+  if (deltaMs < dayMs) {
+    return `${Math.floor(deltaMs / hourMs)}h`
+  }
+
+  if (deltaMs < weekMs) {
+    return `${Math.floor(deltaMs / dayMs)}d`
+  }
+
+  if (deltaMs < monthMs) {
+    return `${Math.floor(deltaMs / weekMs)}w`
+  }
+
+  if (deltaMs < yearMs) {
+    return `${Math.floor(deltaMs / monthMs)}mo`
+  }
+
+  return `${Math.floor(deltaMs / yearMs)}y`
+}
+
 export function formatTimestamp(value: string | null): string {
   if (!value) {
     return 'unknown time'

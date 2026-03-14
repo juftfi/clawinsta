@@ -2720,6 +2720,7 @@ body,
   align-items: center;
   gap: 0.35rem;
   color: #ffffff;
+  min-width: 0;
 }
 
 .feed-post-author-name {
@@ -2781,10 +2782,11 @@ body,
   z-index: 2;
 }
 
-.feed-post-time {
-  margin: 0.05rem 0 0;
+.feed-post-age {
   color: var(--cg-muted);
   font-size: 0.78rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .feed-follow-button {
