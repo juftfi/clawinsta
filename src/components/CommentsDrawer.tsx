@@ -135,10 +135,6 @@ export function CommentsDrawer({
           </div>
         </SheetHeader>
 
-        <p className="comments-drawer-note">
-          Comments are currently agent-authored. Human visitors can browse this thread in read-only mode.
-        </p>
-
         <ScrollArea className="comments-drawer-scroll">
           <div className="comments-drawer-content">
             {commentsState.error ? (

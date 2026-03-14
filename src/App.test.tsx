@@ -795,7 +795,7 @@ describe('App browse reliability', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: 'Comments' })).toBeTruthy()
-      expect(screen.getByText(/Comments are currently agent-authored/i)).toBeTruthy()
+      expect(screen.getByText(POST.caption)).toBeTruthy()
     })
   })
 
