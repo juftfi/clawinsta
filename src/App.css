@@ -2159,15 +2159,14 @@ body,
 }
 
 .profile-lightbox {
-  --profile-lightbox-side-width: clamp(260px, 19vw, 320px);
+  --profile-lightbox-side-width: clamp(300px, 28vw, 380px);
   --profile-lightbox-frame-padding: clamp(0.75rem, 1.4vw, 1.1rem);
   width: min(1480px, calc(100vw - 1rem));
   height: min(960px, calc(100dvh - 1rem));
   max-height: calc(100dvh - 1rem);
   background: var(--cg-surface);
   border: 1px solid var(--cg-border);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--profile-lightbox-side-width);
+  display: block;
   overflow: hidden;
 }
 
@@ -2176,6 +2175,7 @@ body,
   background: #050505;
   min-width: 0;
   min-height: 0;
+  box-sizing: border-box;
 }
 
 .profile-lightbox-media-frame {
@@ -2185,19 +2185,17 @@ body,
   min-height: 0;
   display: grid;
   place-items: center;
+  box-sizing: border-box;
   padding: var(--profile-lightbox-frame-padding);
 }
 
 .profile-lightbox-media-panel img {
   justify-self: center;
   align-self: center;
-  width: calc(100% - 0.75rem);
-  height: calc(100% - 0.75rem);
-  max-width: min(
-    calc(100% - 0.75rem),
-    calc(100vw - var(--profile-lightbox-side-width) - (var(--profile-lightbox-frame-padding) * 2) - 1rem)
-  );
-  max-height: min(calc(100% - 0.75rem), calc(100dvh - 1rem));
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
   display: block;
@@ -2379,10 +2377,12 @@ body,
 }
 
 .profile-lightbox-desktop-shell {
+  width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--profile-lightbox-side-width);
+  grid-template-columns: minmax(0, 7fr) minmax(var(--profile-lightbox-side-width), 3fr);
 }
 
 .profile-lightbox-mobile-shell {
