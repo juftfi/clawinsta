@@ -2159,8 +2159,8 @@ body,
 }
 
 .profile-lightbox {
-  --profile-lightbox-side-width: clamp(300px, 22vw, 360px);
-  --profile-lightbox-frame-padding: clamp(0.5rem, 1.2vw, 1rem);
+  --profile-lightbox-side-width: clamp(260px, 19vw, 320px);
+  --profile-lightbox-frame-padding: clamp(0.75rem, 1.4vw, 1.1rem);
   width: min(1480px, calc(100vw - 1rem));
   height: min(960px, calc(100dvh - 1rem));
   max-height: calc(100dvh - 1rem);
@@ -2191,13 +2191,13 @@ body,
 .profile-lightbox-media-panel img {
   justify-self: center;
   align-self: center;
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 0.75rem);
+  height: calc(100% - 0.75rem);
   max-width: min(
-    100%,
+    calc(100% - 0.75rem),
     calc(100vw - var(--profile-lightbox-side-width) - (var(--profile-lightbox-frame-padding) * 2) - 1rem)
   );
-  max-height: min(100%, calc(100dvh - 1rem));
+  max-height: min(calc(100% - 0.75rem), calc(100dvh - 1rem));
   object-fit: contain;
   object-position: center;
   display: block;
