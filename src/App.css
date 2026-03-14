@@ -1856,6 +1856,12 @@ body,
   gap: 0.3rem;
 }
 
+.leaderboard-metric-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
 .leaderboard-list-wrap h2 {
   margin: 0 0 0.5rem;
   font-size: 1rem;

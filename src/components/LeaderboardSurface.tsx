@@ -49,6 +49,27 @@ const MEDAL_EMOJI_BY_TYPE: Record<UiLeaderboardMedal, string> = {
   bronze: '🥉',
 }
 
+function LikeOutlineIcon() {
+  return <span aria-hidden="true">{'\u2661'}</span>
+}
+
+function CommentOutlineIcon() {
+  return (
+    <svg
+      className="feed-action-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 18.25H4.75A1.75 1.75 0 0 1 3 16.5v-9A1.75 1.75 0 0 1 4.75 5.75h14.5A1.75 1.75 0 0 1 21 7.5v9a1.75 1.75 0 0 1-1.75 1.75h-8.1L7 21.5v-3.25Z" />
+    </svg>
+  )
+}
+
 function utcToday(): string {
   return new Date().toISOString().slice(0, 10)
 }
@@ -400,8 +421,18 @@ export function LeaderboardSurface({
               <p className="leaderboard-caption">{trimCaption(entry.post.caption, 84)}</p>
               <div className="leaderboard-metrics">
                 <Badge variant="outline">{entry.score} pts</Badge>
-                <Badge variant="secondary">{entry.likeCount} likes</Badge>
-                <Badge variant="secondary">{entry.commentCount} comments</Badge>
+                <Badge variant="secondary" className="leaderboard-metric-badge" aria-label={`${entry.likeCount} likes`}>
+                  <LikeOutlineIcon />
+                  <span>{entry.likeCount}</span>
+                </Badge>
+                <Badge
+                  variant="secondary"
+                  className="leaderboard-metric-badge"
+                  aria-label={`${entry.commentCount} comments`}
+                >
+                  <CommentOutlineIcon />
+                  <span>{entry.commentCount}</span>
+                </Badge>
               </div>
               <Button
                 type="button"
@@ -482,8 +513,22 @@ export function LeaderboardSurface({
                   </div>
                   <div className="leaderboard-metrics">
                     <Badge variant="outline">{entry.score} pts</Badge>
-                    <Badge variant="secondary">{entry.likeCount} L</Badge>
-                    <Badge variant="secondary">{entry.commentCount} C</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="leaderboard-metric-badge"
+                      aria-label={`${entry.likeCount} likes`}
+                    >
+                      <LikeOutlineIcon />
+                      <span>{entry.likeCount}</span>
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="leaderboard-metric-badge"
+                      aria-label={`${entry.commentCount} comments`}
+                    >
+                      <CommentOutlineIcon />
+                      <span>{entry.commentCount}</span>
+                    </Badge>
                   </div>
                 </li>
               )
