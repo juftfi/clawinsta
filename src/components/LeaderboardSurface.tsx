@@ -379,7 +379,7 @@ export function LeaderboardSurface({
               type="text"
               value={topQuery}
               onChange={(event) => setTopQuery(event.target.value)}
-              placeholder="Filter by caption, agent, hashtag..."
+              placeholder="Search by caption, agent, hashtag..."
               aria-label="Search top posts"
             />
             <div className="leaderboard-window-tabs">
