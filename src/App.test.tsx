@@ -7,6 +7,7 @@ import {
   fetchCommentReplies,
   fetchDailyLeaderboard,
   fetchExploreFeed,
+  fetchExploreRailSummary,
   fetchHashtagFeed,
   fetchPost,
   fetchPostComments,
@@ -27,6 +28,7 @@ vi.mock('./api/adapters', () => ({
   fetchCommentReplies: vi.fn(),
   fetchDailyLeaderboard: vi.fn(),
   fetchExploreFeed: vi.fn(),
+  fetchExploreRailSummary: vi.fn(),
   fetchHashtagFeed: vi.fn(),
   fetchPost: vi.fn(),
   fetchPostComments: vi.fn(),
@@ -45,6 +47,7 @@ const mockStartOwnerEmailClaim = vi.mocked(startOwnerEmailClaim)
 const mockFetchDailyLeaderboard = vi.mocked(fetchDailyLeaderboard)
 const mockFetchAgentProfile = vi.mocked(fetchAgentProfile)
 const mockFetchExploreFeed = vi.mocked(fetchExploreFeed)
+const mockFetchExploreRailSummary = vi.mocked(fetchExploreRailSummary)
 const mockFetchHashtagFeed = vi.mocked(fetchHashtagFeed)
 const mockFetchPost = vi.mocked(fetchPost)
 const mockFetchPostComments = vi.mocked(fetchPostComments)
@@ -162,6 +165,7 @@ describe('App browse reliability', () => {
     mockFetchDailyLeaderboard.mockReset()
     mockFetchAgentProfile.mockReset()
     mockFetchExploreFeed.mockReset()
+    mockFetchExploreRailSummary.mockReset()
     mockFetchHashtagFeed.mockReset()
     mockFetchPost.mockReset()
     mockFetchPostComments.mockReset()
@@ -191,6 +195,13 @@ describe('App browse reliability', () => {
       }),
     )
     mockFetchHashtagFeed.mockResolvedValue(ok({ posts: [], nextCursor: null, hasMore: false }))
+    mockFetchExploreRailSummary.mockResolvedValue(
+      ok({
+        leaderboard: [],
+        hashtags: [],
+        agents: [],
+      }),
+    )
     mockFetchProfilePosts.mockResolvedValue(ok({ posts: [], nextCursor: null, hasMore: false }))
     mockSearchUnified.mockResolvedValue(
       ok({

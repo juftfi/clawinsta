@@ -1,7 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import type { UiPost } from '../api/adapters'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchExploreRailSummary, type UiPost } from '../api/adapters'
 import { RightRail } from './RightRail'
+
+vi.mock('../api/adapters', async () => {
+  const actual = await vi.importActual<typeof import('../api/adapters')>('../api/adapters')
+  return {
+    ...actual,
+    fetchExploreRailSummary: vi.fn(),
+  }
+})
+
+const mockFetchExploreRailSummary = vi.mocked(fetchExploreRailSummary)
 
 const POSTS: UiPost[] = [
   {
@@ -49,7 +59,54 @@ const POSTS: UiPost[] = [
 ]
 
 describe('RightRail', () => {
-  it('renders ranked leaderboard and handles rail actions', () => {
+  beforeEach(() => {
+    mockFetchExploreRailSummary.mockReset()
+    mockFetchExploreRailSummary.mockResolvedValue({
+      ok: true,
+      status: 200,
+      requestId: 'req-rail',
+      data: {
+        leaderboard: [
+          {
+            id: 'a1',
+            name: 'beta_agent',
+            avatarUrl: 'https://cdn.example.com/a1.jpg',
+            claimed: true,
+            score: 54,
+          },
+          {
+            id: 'a2',
+            name: 'alpha_agent',
+            avatarUrl: null,
+            claimed: false,
+            score: 21,
+          },
+        ],
+        hashtags: [
+          { tag: 'clawgram', postCount: 41 },
+          { tag: 'launch', postCount: 12 },
+        ],
+        agents: [
+          {
+            id: 'a1',
+            name: 'beta_agent',
+            avatarUrl: 'https://cdn.example.com/a1.jpg',
+            claimed: true,
+            postCount: 102,
+          },
+          {
+            id: 'a2',
+            name: 'alpha_agent',
+            avatarUrl: null,
+            claimed: false,
+            postCount: 48,
+          },
+        ],
+      },
+    })
+  })
+
+  it('renders ranked leaderboard and hydrates site-wide rail counts', async () => {
     const onOpenLeaderboard = vi.fn()
     const onSelectHashtag = vi.fn()
     const onOpenAuthorProfile = vi.fn()
@@ -65,9 +122,12 @@ describe('RightRail', () => {
       />,
     )
 
+    await screen.findByText('102 posts')
     expect(screen.getAllByAltText('beta_agent avatar').length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'Open profile for beta_agent' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'Open profile for alpha_agent' }).length).toBeGreaterThan(0)
+    expect(screen.getByText('54')).toBeTruthy()
+    expect(screen.getByText('41')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Open' }))
     expect(onOpenLeaderboard).toHaveBeenCalledTimes(1)
@@ -80,6 +140,10 @@ describe('RightRail', () => {
   })
 
   it('shows loading placeholder when no data is available yet', () => {
+    mockFetchExploreRailSummary.mockReturnValue(
+      new Promise(() => {}),
+    )
+
     render(
       <RightRail
         posts={[]}
@@ -91,6 +155,7 @@ describe('RightRail', () => {
       />,
     )
 
-    expect(screen.getAllByText('Loading live activity...').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Loading 24-hour activity...').length).toBeGreaterThan(0)
+    expect(mockFetchExploreRailSummary).toHaveBeenCalledTimes(1)
   })
 })

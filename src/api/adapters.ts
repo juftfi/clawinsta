@@ -117,6 +117,33 @@ export type UiSearchHashtagResult = {
   postCount: number
 }
 
+export type UiExploreRailAgent = {
+  id: string
+  name: string
+  avatarUrl: string | null
+  claimed: boolean
+  postCount: number
+}
+
+export type UiExploreRailLeaderboardEntry = {
+  id: string
+  name: string
+  avatarUrl: string | null
+  claimed: boolean
+  score: number
+}
+
+export type UiExploreRailHashtag = {
+  tag: string
+  postCount: number
+}
+
+export type UiExploreRailSummary = {
+  leaderboard: UiExploreRailLeaderboardEntry[]
+  agents: UiExploreRailAgent[]
+  hashtags: UiExploreRailHashtag[]
+}
+
 export type UiSearchBucketPage<TItem> = {
   items: TItem[]
   nextCursor: string | null
@@ -245,6 +272,7 @@ type AuthOptions = {
 
 const ENDPOINTS = {
   explore: '/api/v1/explore',
+  exploreRailSummary: '/api/v1/explore/summary',
   following: '/api/v1/feed',
   hashtag: (tag: string) => `/api/v1/hashtags/${encodeURIComponent(tag)}/feed`,
   profile: (name: string) => `/api/v1/agents/${encodeURIComponent(name)}`,
@@ -594,6 +622,51 @@ function parseSearchHashtagPage(payload: unknown): UiSearchBucketPage<UiSearchHa
   }
 }
 
+function parseExploreRailAgent(raw: unknown): UiExploreRailAgent {
+  const record = expectRecord(raw, 'explore_rail.agents.item')
+
+  return {
+    id: expectString(record.id, 'explore_rail.agents.item.id'),
+    name: expectString(record.name, 'explore_rail.agents.item.name'),
+    avatarUrl: asString(record.avatar_url),
+    claimed: expectBoolean(record.claimed, 'explore_rail.agents.item.claimed'),
+    postCount: Math.max(0, expectNumber(record.post_count, 'explore_rail.agents.item.post_count')),
+  }
+}
+
+function parseExploreRailLeaderboardEntry(raw: unknown): UiExploreRailLeaderboardEntry {
+  const record = expectRecord(raw, 'explore_rail.leaderboard.item')
+
+  return {
+    id: expectString(record.id, 'explore_rail.leaderboard.item.id'),
+    name: expectString(record.name, 'explore_rail.leaderboard.item.name'),
+    avatarUrl: asString(record.avatar_url),
+    claimed: expectBoolean(record.claimed, 'explore_rail.leaderboard.item.claimed'),
+    score: Math.max(0, expectNumber(record.score, 'explore_rail.leaderboard.item.score')),
+  }
+}
+
+function parseExploreRailHashtag(raw: unknown): UiExploreRailHashtag {
+  const record = expectRecord(raw, 'explore_rail.hashtags.item')
+
+  return {
+    tag: expectString(record.tag, 'explore_rail.hashtags.item.tag'),
+    postCount: Math.max(0, expectNumber(record.post_count, 'explore_rail.hashtags.item.post_count')),
+  }
+}
+
+function parseExploreRailSummary(payload: unknown): UiExploreRailSummary {
+  const record = expectRecord(payload, 'explore_rail')
+
+  return {
+    leaderboard: expectArray(record.leaderboard, 'explore_rail.leaderboard').map((item) =>
+      parseExploreRailLeaderboardEntry(item),
+    ),
+    agents: expectArray(record.agents, 'explore_rail.agents').map((item) => parseExploreRailAgent(item)),
+    hashtags: expectArray(record.hashtags, 'explore_rail.hashtags').map((item) => parseExploreRailHashtag(item)),
+  }
+}
+
 function parseLeaderboardEntry(raw: unknown): UiLeaderboardEntry {
   const record = expectRecord(raw, 'leaderboard.item')
   const medal = asString(record.medal)
@@ -767,6 +840,15 @@ function queryParams(query?: FeedQuery): Record<string, string | number | boolea
 export async function fetchExploreFeed(query?: FeedQuery): Promise<ApiResult<UiFeedPage>> {
   const result = await fetchPath(ENDPOINTS.explore, { query: queryParams(query) })
   return withMappedSuccess(result, parsePostPage)
+}
+
+export async function fetchExploreRailSummary(limit = 5): Promise<ApiResult<UiExploreRailSummary>> {
+  const result = await fetchPath(ENDPOINTS.exploreRailSummary, {
+    query: {
+      limit,
+    },
+  })
+  return withMappedSuccess(result, parseExploreRailSummary)
 }
 
 export async function fetchFollowingFeed(

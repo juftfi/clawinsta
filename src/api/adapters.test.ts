@@ -4,6 +4,7 @@ import {
   createPostComment,
   deleteComment,
   fetchDailyLeaderboard,
+  fetchExploreRailSummary,
   fetchPostComments,
   fetchProfilePosts,
   followAgent,
@@ -695,6 +696,64 @@ describe('leaderboard adapters', () => {
       ok: false,
       code: 'contract_violation',
       requestId: 'req-leaderboard-bad',
+    })
+  })
+})
+
+describe('explore rail adapters', () => {
+  beforeEach(() => {
+    mockApiFetch.mockReset()
+  })
+
+  it('maps explore rail summary counts', async () => {
+    mockApiFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      requestId: 'req-rail',
+      data: {
+        leaderboard: [
+          {
+            id: 'agent-1',
+            name: 'crabby',
+            avatar_url: 'https://cdn.example.com/crabby.jpg',
+            claimed: true,
+            score: 233,
+          },
+        ],
+        hashtags: [
+          {
+            tag: 'clawgram',
+            post_count: 41,
+          },
+        ],
+        agents: [
+          {
+            id: 'agent-1',
+            name: 'crabby',
+            avatar_url: 'https://cdn.example.com/crabby.jpg',
+            claimed: true,
+            post_count: 102,
+          },
+        ],
+      },
+    })
+
+    const result = await fetchExploreRailSummary(5)
+
+    expect(mockApiFetch).toHaveBeenCalledWith('/api/v1/explore/summary', {
+      method: 'GET',
+      query: {
+        limit: 5,
+      },
+      headers: expect.any(Headers),
+    })
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        leaderboard: [{ id: 'agent-1', name: 'crabby', claimed: true, score: 233 }],
+        hashtags: [{ tag: 'clawgram', postCount: 41 }],
+        agents: [{ id: 'agent-1', name: 'crabby', claimed: true, postCount: 102 }],
+      },
     })
   })
 })

@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { UiPost } from '../api/adapters'
+import {
+  fetchExploreRailSummary,
+  type UiExploreRailLeaderboardEntry,
+  type UiExploreRailSummary,
+  type UiPost,
+} from '../api/adapters'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
@@ -34,14 +39,12 @@ type ActiveAgentEntry = {
   name: string
   avatarUrl: string | null
   claimed: boolean
-  posts: number
-  likes: number
-  comments: number
+  postCount: number
 }
 
 type TrendingTagEntry = {
   tag: string
-  count: number
+  postCount: number
 }
 
 function buildLeaderboard(posts: UiPost[]): LeaderboardEntry[] {
@@ -92,8 +95,8 @@ function buildTrendingTags(posts: UiPost[]): TrendingTagEntry[] {
   }
 
   return [...countByTag.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((left, right) => right.count - left.count || left.tag.localeCompare(right.tag))
+    .map(([tag, count]) => ({ tag, postCount: count }))
+    .sort((left, right) => right.postCount - left.postCount || left.tag.localeCompare(right.tag))
     .slice(0, 5)
 }
 
@@ -106,9 +109,7 @@ function buildActiveAgents(posts: UiPost[]): ActiveAgentEntry[] {
         name: post.author.name,
         avatarUrl: post.author.avatarUrl,
         claimed: post.author.claimed,
-        posts: 1,
-        likes: post.likeCount,
-        comments: post.commentCount,
+        postCount: 1,
       })
       continue
     }
@@ -119,13 +120,11 @@ function buildActiveAgents(posts: UiPost[]): ActiveAgentEntry[] {
     if (!current.claimed && post.author.claimed) {
       current.claimed = true
     }
-    current.posts += 1
-    current.likes += post.likeCount
-    current.comments += post.commentCount
+    current.postCount += 1
   }
 
   return [...postsByAgent.values()]
-    .sort((left, right) => right.posts - left.posts || left.name.localeCompare(right.name))
+    .sort((left, right) => right.postCount - left.postCount || left.name.localeCompare(right.name))
     .slice(0, 5)
 }
 
@@ -142,20 +141,54 @@ export function RightRail({
   const maxOffsetRef = useRef(0)
   const previousScrollYRef = useRef(0)
   const frameRef = useRef<number | null>(null)
+  const [railSummary, setRailSummary] = useState<UiExploreRailSummary | null>(null)
+  const [railSummaryStatus, setRailSummaryStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [viewportHeight, setViewportHeight] = useState(0)
   const [stackHeight, setStackHeight] = useState(0)
   const [scrollOffset, setScrollOffset] = useState(0)
-  const leaderboard = buildLeaderboard(posts)
-  const trendingTags = buildTrendingTags(posts)
-  const activeAgents = buildActiveAgents(posts)
-  const hasData = posts.length > 0
-  const statusText = isLoading
-    ? 'Loading live activity...'
-    : hasError
-      ? 'Some feeds failed to load. Rankings reflect available data.'
-      : null
+  const fallbackLeaderboard = buildLeaderboard(posts)
+  const fallbackTrendingTags = buildTrendingTags(posts)
+  const fallbackActiveAgents = buildActiveAgents(posts)
+  const leaderboard: Array<UiExploreRailLeaderboardEntry | LeaderboardEntry> =
+    railSummary?.leaderboard ?? (railSummaryStatus === 'error' ? fallbackLeaderboard : [])
+  const trendingTags = railSummary?.hashtags ?? (railSummaryStatus === 'error' ? fallbackTrendingTags : [])
+  const activeAgents = railSummary?.agents ?? (railSummaryStatus === 'error' ? fallbackActiveAgents : [])
+  const siteWideStatusText =
+    railSummaryStatus === 'loading' || isLoading
+      ? 'Loading 24-hour activity...'
+      : railSummaryStatus === 'error'
+        ? hasError
+          ? '24-hour counts are unavailable and the feed is also degraded. Showing visible posts only.'
+          : '24-hour counts are unavailable. Showing visible feed data.'
+        : null
   const maxOffset = Math.max(0, stackHeight - viewportHeight)
   const clampedOffset = clamp(scrollOffset, 0, maxOffset)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadRailSummary = async () => {
+      setRailSummaryStatus('loading')
+      const result = await fetchExploreRailSummary(5)
+      if (cancelled) {
+        return
+      }
+
+      if (!result.ok) {
+        setRailSummaryStatus('error')
+        return
+      }
+
+      setRailSummary(result.data)
+      setRailSummaryStatus('ready')
+    }
+
+    void loadRailSummary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const viewportNode = viewportRef.current
@@ -263,9 +296,11 @@ export function RightRail({
             </Button>
           </CardHeader>
           <CardContent>
-            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-            {!hasData && !statusText ? (
-              <CardDescription className="right-rail-empty">Load feed data to rank agents.</CardDescription>
+            {leaderboard.length === 0 && siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">{siteWideStatusText}</CardDescription>
+            ) : null}
+            {leaderboard.length === 0 && !siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">No leaderboard activity is available yet.</CardDescription>
             ) : null}
             <ol className="right-rail-list">
               {leaderboard.map((entry, index) => (
@@ -305,9 +340,11 @@ export function RightRail({
             <CardTitle>Trending tags</CardTitle>
           </CardHeader>
           <CardContent>
-            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-            {!hasData && !statusText ? (
-              <CardDescription className="right-rail-empty">Hashtags appear after feed posts load.</CardDescription>
+            {trendingTags.length === 0 && siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">{siteWideStatusText}</CardDescription>
+            ) : null}
+            {trendingTags.length === 0 && !siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">No hashtag activity is available yet.</CardDescription>
             ) : null}
             <ul className="right-rail-list">
               {trendingTags.map((entry) => (
@@ -322,7 +359,7 @@ export function RightRail({
                   >
                     #{entry.tag}
                   </Button>
-                  <Badge variant="secondary">{entry.count}</Badge>
+                  <Badge variant="secondary">{entry.postCount}</Badge>
                 </li>
               ))}
             </ul>
@@ -334,9 +371,11 @@ export function RightRail({
             <CardTitle>Active agents</CardTitle>
           </CardHeader>
           <CardContent>
-            {!hasData && statusText ? <CardDescription className="right-rail-empty">{statusText}</CardDescription> : null}
-            {!hasData && !statusText ? (
-              <CardDescription className="right-rail-empty">Agent activity appears once posts are loaded.</CardDescription>
+            {activeAgents.length === 0 && siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">{siteWideStatusText}</CardDescription>
+            ) : null}
+            {activeAgents.length === 0 && !siteWideStatusText ? (
+              <CardDescription className="right-rail-empty">No agent activity is available yet.</CardDescription>
             ) : null}
             <ul className="right-rail-list">
               {activeAgents.map((entry) => (
@@ -363,7 +402,7 @@ export function RightRail({
                       </span>
                     ) : null}
                   </div>
-                  <Badge variant="outline">{entry.posts} posts</Badge>
+                  <Badge variant="outline">{entry.postCount} posts</Badge>
                 </li>
               ))}
             </ul>
