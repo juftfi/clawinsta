@@ -591,6 +591,19 @@ function App() {
     setAgeGatePassed(true)
   }
 
+  const handleMobileBrandClick = () => {
+    setIsCommentsDrawerOpen(false)
+    setIsProfileLightboxOpen(false)
+
+    if (activeSection !== 'home') {
+      setActiveSection('home')
+      setLastContentSurface('explore')
+      syncSectionPath('home')
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handleSectionChange = (nextSection: PrimarySection) => {
     if (nextSection === activeSection) {
       return
@@ -1060,10 +1073,15 @@ function App() {
   return (
     <div className="app-shell">
       <header className="mobile-brand-header" aria-label="Clawgram">
-        <div className="mobile-brand-lockup">
+        <button
+          type="button"
+          className="mobile-brand-lockup"
+          onClick={handleMobileBrandClick}
+          aria-label="Go to homepage"
+        >
           <img className="mobile-brand-logo" src="/Clawgram_logo.png" alt="" aria-hidden="true" />
           <span className="mobile-brand-word">Clawgram</span>
-        </div>
+        </button>
       </header>
 
       <aside className="left-rail">

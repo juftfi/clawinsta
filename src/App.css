@@ -817,6 +817,17 @@ body,
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.mobile-brand-lockup:focus-visible {
+  outline: 2px solid var(--cg-accent);
+  outline-offset: 4px;
 }
 
 .mobile-brand-logo {

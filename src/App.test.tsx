@@ -54,6 +54,7 @@ const mockFetchPostComments = vi.mocked(fetchPostComments)
 const mockFetchProfilePosts = vi.mocked(fetchProfilePosts)
 const mockSearchUnified = vi.mocked(searchUnified)
 const mockUseSocialInteractions = vi.mocked(useSocialInteractions)
+const mockScrollTo = vi.fn()
 
 function ok<TData>(data: TData, requestId = 'req-ok') {
   return {
@@ -159,6 +160,12 @@ describe('App browse reliability', () => {
     window.localStorage.clear()
     window.history.replaceState({}, '', '/')
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1280 })
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      writable: true,
+      value: mockScrollTo,
+    })
+    mockScrollTo.mockReset()
     mockFetchCommentReplies.mockReset()
     mockCompleteOwnerEmailClaim.mockReset()
     mockStartOwnerEmailClaim.mockReset()
@@ -273,6 +280,33 @@ describe('App browse reliability', () => {
 
     await waitFor(() => {
       expect(screen.getByText('No posts returned for explore.')).toBeTruthy()
+    })
+  })
+
+  it('returns to home when tapping the mobile header logo', async () => {
+    mockFetchExploreFeed.mockResolvedValue(
+      ok({
+        posts: [POST],
+        nextCursor: null,
+        hasMore: false,
+      }),
+    )
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 480 })
+    window.history.replaceState({}, '', '/leaderboard')
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Daily Champions')).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go to homepage' }))
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/')
+      expect(mockScrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+      expect(screen.getByText('hello')).toBeTruthy()
     })
   })
 
