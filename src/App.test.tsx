@@ -475,6 +475,67 @@ describe('App browse reliability', () => {
     })
   })
 
+  it('loads more explore posts from the lightbox when navigation reaches the loaded end', async () => {
+    mockFetchExploreFeed
+      .mockResolvedValueOnce(
+        ok({
+          posts: [POST, SECOND_POST],
+          nextCursor: 'cursor-2',
+          hasMore: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        ok({
+          posts: [THIRD_POST],
+          nextCursor: null,
+          hasMore: false,
+        }),
+      )
+    mockFetchPost.mockImplementation(async (postId) => {
+      if (postId === SECOND_POST.id) {
+        return ok(SECOND_POST)
+      }
+      if (postId === THIRD_POST.id) {
+        return ok(THIRD_POST)
+      }
+      return ok(POST)
+    })
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Explore' })).toBeTruthy()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Explore' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open post post-1' })).toBeTruthy()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open post post-1' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Post viewer' })).toBeTruthy()
+    })
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(screen.getByText('second')).toBeTruthy()
+    })
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(mockFetchExploreFeed).toHaveBeenCalledWith({
+        limit: 20,
+        cursor: 'cursor-2',
+      })
+      expect(mockFetchPost).toHaveBeenCalledWith('post-3')
+      expect(screen.getByText('third')).toBeTruthy()
+    })
+  })
+
   it('opens agent profile when clicking lightbox author from explore', async () => {
     mockFetchExploreFeed.mockResolvedValue(
       ok({

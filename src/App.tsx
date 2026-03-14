@@ -816,6 +816,22 @@ function App() {
     })
   }
 
+  const handleLoadMoreExploreLightboxPosts = async (cursor: string) => {
+    if (isExploreSearchActive) {
+      await loadSurface('search', {
+        append: true,
+        bucket: 'posts',
+        cursor,
+      })
+      return
+    }
+
+    await loadSurface('explore', {
+      append: true,
+      cursor,
+    })
+  }
+
   const handleLeaderboardVisiblePostsChange = (nextPosts: UiPost[]) => {
     setLeaderboardVisiblePosts((current) => {
       if (
@@ -1346,6 +1362,17 @@ function App() {
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              hasMorePosts={
+                isExploreSearchActive
+                  ? searchState.page.posts.hasMore
+                  : (activeState?.page.hasMore ?? false)
+              }
+              nextPostsCursor={
+                isExploreSearchActive
+                  ? searchState.page.posts.nextCursor
+                  : (activeState?.page.nextCursor ?? null)
+              }
+              onLoadMorePosts={handleLoadMoreExploreLightboxPosts}
             />
 
             {!isExploreSearchActive ? (
