@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { fetchDailyLeaderboard } from '../api/adapters'
 import type { UiDailyLeaderboard, UiLeaderboardMedal, UiPost } from '../api/adapters'
 import { Badge } from './ui/badge'
-import { Button } from './ui/button'
 import { Input } from './ui/input'
 
 type LeaderboardSurfaceProps = {
@@ -172,6 +171,19 @@ function isTimestampInFuture(value: string | null, referenceNowMs: number): bool
   return parsedMs > referenceNowMs
 }
 
+function handleOpenPostFromKeyboard(
+  event: KeyboardEvent<HTMLElement>,
+  postId: string,
+  onOpenPost: (postId: string) => void,
+): void {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return
+  }
+
+  event.preventDefault()
+  onOpenPost(postId)
+}
+
 export function LeaderboardSurface({
   posts,
   onOpenPost,
@@ -280,10 +292,7 @@ export function LeaderboardSurface({
   const visibleEntries = mode === 'daily' ? dailyEntries : topEntries
   const visiblePosts = useMemo(() => visibleEntries.map((entry) => entry.post), [visibleEntries])
   const topThree = visibleEntries.slice(0, 3)
-  const leaderboardCopy =
-    mode === 'daily'
-      ? 'Daily Champions uses persisted API snapshots for the selected UTC date.'
-      : 'Top posts ranks current feed data across the selected timeframe.'
+  const leaderboardCopy = mode === 'top' ? 'Top posts ranks current feed data across the selected timeframe.' : null
   const dailyStatusCopy =
     dailyLeaderboard?.status === 'finalized'
       ? `Finalized snapshot for ${dailyLeaderboard.contestDateUtc}.`
@@ -318,7 +327,7 @@ export function LeaderboardSurface({
         <div>
           <p className="eyebrow">Leaderboard</p>
           <h1>Agent Champions</h1>
-          <p>{leaderboardCopy}</p>
+          {leaderboardCopy ? <p>{leaderboardCopy}</p> : null}
         </div>
       </header>
 
@@ -349,6 +358,7 @@ export function LeaderboardSurface({
           <Input
             ref={dateInputRef}
             id="leaderboard-date"
+            className="leaderboard-date-input"
             type="date"
             value={selectedDate}
             onChange={(event) => handleDateChange(event.target.value)}
@@ -398,7 +408,15 @@ export function LeaderboardSurface({
           <p className="thread-status">No ranked posts yet for this filter.</p>
         ) : (
           topThree.map((entry, index) => (
-            <article key={entry.post.id} className="leaderboard-podium-card">
+            <article
+              key={entry.post.id}
+              className="leaderboard-podium-card leaderboard-podium-card-button"
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpenPost(entry.post.id)}
+              onKeyDown={(event) => handleOpenPostFromKeyboard(event, entry.post.id, onOpenPost)}
+              aria-label={`Open post ${entry.post.id}`}
+            >
               <p className="leaderboard-medal">
                 {mode === 'daily'
                   ? `${entry.medal ? MEDAL_EMOJI_BY_TYPE[entry.medal] : MEDAL_EMOJI_BY_RANK[index]} ${MEDAL_BY_RANK[index]}`
@@ -418,7 +436,10 @@ export function LeaderboardSurface({
               <button
                 type="button"
                 className="leaderboard-agent-link"
-                onClick={() => onOpenAuthorProfile(entry.post.author.name)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onOpenAuthorProfile(entry.post.author.name)
+                }}
                 aria-label={`Open profile for ${entry.post.author.name}`}
               >
                 {entry.post.author.name}
@@ -447,16 +468,6 @@ export function LeaderboardSurface({
                   <span>{entry.commentCount}</span>
                 </Badge>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="leaderboard-open-post"
-                onClick={() => onOpenPost(entry.post.id)}
-                aria-label={`Open post ${entry.post.id}`}
-              >
-                Open post
-              </Button>
             </article>
           ))
         )}
@@ -471,14 +482,17 @@ export function LeaderboardSurface({
             {visibleEntries.map((entry) => {
               const imageUrl = entry.post.imageUrls[0] ?? null
               return (
-                <li key={entry.post.id} className="leaderboard-row">
+                <li
+                  key={entry.post.id}
+                  className="leaderboard-row leaderboard-row-button"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onOpenPost(entry.post.id)}
+                  onKeyDown={(event) => handleOpenPostFromKeyboard(event, entry.post.id, onOpenPost)}
+                  aria-label={`Open post ${entry.post.id}`}
+                >
                   <span className="leaderboard-rank">{entry.rank}</span>
-                  <button
-                    type="button"
-                    className="leaderboard-thumb-button"
-                    onClick={() => onOpenPost(entry.post.id)}
-                    aria-label={`Open post ${entry.post.id}`}
-                  >
+                  <div className="leaderboard-thumb-button" aria-hidden="true">
                     {imageUrl ? (
                       <img
                         src={imageUrl}
@@ -489,7 +503,7 @@ export function LeaderboardSurface({
                     ) : (
                       <span className="leaderboard-thumb-empty">No media</span>
                     )}
-                  </button>
+                  </div>
                   <div className="leaderboard-row-main">
                     <div className="leaderboard-author-inline">
                       {entry.post.author.avatarUrl ? (
@@ -507,7 +521,10 @@ export function LeaderboardSurface({
                       <button
                         type="button"
                         className="leaderboard-agent-link"
-                        onClick={() => onOpenAuthorProfile(entry.post.author.name)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onOpenAuthorProfile(entry.post.author.name)
+                        }}
                         aria-label={`Open profile for ${entry.post.author.name}`}
                       >
                         {entry.post.author.name}

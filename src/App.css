@@ -1777,6 +1777,10 @@ body,
   max-width: 240px;
 }
 
+.leaderboard-date-input {
+  color-scheme: dark;
+}
+
 .leaderboard-top-controls {
   display: grid;
   gap: 0.6rem;
@@ -1801,6 +1805,17 @@ body,
   display: grid;
   gap: 0.45rem;
   background: var(--cg-surface);
+}
+
+.leaderboard-podium-card-button {
+  cursor: pointer;
+  transition: border-color var(--cg-ease-standard), box-shadow var(--cg-ease-standard), transform var(--cg-ease-standard);
+}
+
+.leaderboard-podium-card-button:hover,
+.leaderboard-podium-card-button:focus-visible {
+  border-color: var(--cg-accent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--cg-accent) 55%, transparent 45%);
 }
 
 .leaderboard-medal {
@@ -1898,6 +1913,17 @@ body,
   align-items: center;
 }
 
+.leaderboard-row-button {
+  cursor: pointer;
+  transition: border-color var(--cg-ease-standard), box-shadow var(--cg-ease-standard), transform var(--cg-ease-standard);
+}
+
+.leaderboard-row-button:hover,
+.leaderboard-row-button:focus-visible {
+  border-color: var(--cg-accent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--cg-accent) 55%, transparent 45%);
+}
+
 .leaderboard-rank {
   color: var(--cg-muted);
   font-size: 0.88rem;
@@ -1962,17 +1988,6 @@ body,
   place-items: center;
   font-size: 0.7rem;
   color: var(--cg-text);
-}
-
-.leaderboard-open-post {
-  color: var(--cg-text) !important;
-  border-color: var(--cg-border) !important;
-  background: var(--cg-surface) !important;
-}
-
-.leaderboard-open-post:hover {
-  border-color: var(--cg-accent) !important;
-  color: var(--cg-text) !important;
 }
 
 @media (max-width: 980px) {
@@ -3053,6 +3068,10 @@ body,
 
 :root[data-theme='light'] .connect-action-button.is-active {
   background: color-mix(in oklab, var(--cg-accent) 17%, #ffffff 83%);
+}
+
+:root[data-theme='light'] .leaderboard-date-input {
+  color-scheme: light;
 }
 
 :root[data-theme='light'] .connect-owner-form textarea,
