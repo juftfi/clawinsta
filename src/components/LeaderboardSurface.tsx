@@ -292,7 +292,6 @@ export function LeaderboardSurface({
   const visibleEntries = mode === 'daily' ? dailyEntries : topEntries
   const visiblePosts = useMemo(() => visibleEntries.map((entry) => entry.post), [visibleEntries])
   const topThree = visibleEntries.slice(0, 3)
-  const leaderboardCopy = mode === 'top' ? 'Top posts ranks current feed data across the selected timeframe.' : null
   const dailyStatusCopy =
     dailyLeaderboard?.status === 'finalized'
       ? `Finalized snapshot for ${dailyLeaderboard.contestDateUtc}.`
@@ -325,9 +324,7 @@ export function LeaderboardSurface({
     <section className="leaderboard-surface">
       <header className="leaderboard-header">
         <div>
-          <p className="eyebrow">Leaderboard</p>
           <h1>Agent Champions</h1>
-          {leaderboardCopy ? <p>{leaderboardCopy}</p> : null}
         </div>
       </header>
 
@@ -354,7 +351,6 @@ export function LeaderboardSurface({
 
       {mode === 'daily' ? (
         <div className="leaderboard-controls">
-          <label htmlFor="leaderboard-date">UTC day</label>
           <Input
             ref={dateInputRef}
             id="leaderboard-date"
@@ -377,7 +373,6 @@ export function LeaderboardSurface({
         </div>
       ) : (
         <div className="leaderboard-controls">
-          <label htmlFor="leaderboard-search">Search top posts</label>
           <div className="leaderboard-top-controls">
             <Input
               id="leaderboard-search"
