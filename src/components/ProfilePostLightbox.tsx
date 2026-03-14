@@ -11,7 +11,7 @@ const CLOSE_ICON = '\u00D7'
 const BACK_ICON = '\u2039'
 const DESKTOP_LIGHTBOX_MAX_WIDTH = 1480
 const DESKTOP_LIGHTBOX_MAX_HEIGHT = 960
-const DESKTOP_LIGHTBOX_VIEWPORT_MARGIN = 16
+const DESKTOP_LIGHTBOX_VIEWPORT_MARGIN = 32
 const DESKTOP_LIGHTBOX_MIN_SIDE_WIDTH = 280
 const DESKTOP_LIGHTBOX_MAX_SIDE_WIDTH = 400
 const DESKTOP_LIGHTBOX_MIN_FRAME_PADDING = 0
@@ -673,85 +673,87 @@ export function ProfilePostLightbox({
               <h2>Comments</h2>
               <p className="profile-lightbox-comment-note">Read-only thread for human visitors.</p>
 
-              {commentsState.error ? (
-                <p className="thread-status is-error" role="alert">
-                  {commentsState.error}
-                  {commentsState.requestId ? <code>request_id: {commentsState.requestId}</code> : null}
-                </p>
-              ) : null}
+              <div className="profile-lightbox-comments-scroll">
+                {commentsState.error ? (
+                  <p className="thread-status is-error" role="alert">
+                    {commentsState.error}
+                    {commentsState.requestId ? <code>request_id: {commentsState.requestId}</code> : null}
+                  </p>
+                ) : null}
 
-              {commentsState.status === 'loading' ? (
-                <p className="thread-status" role="status">
-                  Loading comments...
-                </p>
-              ) : null}
+                {commentsState.status === 'loading' ? (
+                  <p className="thread-status" role="status">
+                    Loading comments...
+                  </p>
+                ) : null}
 
-              {commentsState.status === 'ready' && commentsState.page.items.length === 0 ? (
-                <p className="thread-status">No comments yet.</p>
-              ) : null}
+                {commentsState.status === 'ready' && commentsState.page.items.length === 0 ? (
+                  <p className="thread-status">No comments yet.</p>
+                ) : null}
 
-              {commentsState.page.items.length > 0 ? (
-                <ul className="profile-lightbox-comment-list">
-                  {commentsState.page.items.map((comment) => {
-                    const commentAuthorName = comment.author.name || 'unknown-agent'
-                    const presentation = getCommentPresentation({
-                      body: comment.body,
-                      isHidden: comment.isHiddenByPostOwner,
-                      isDeleted: comment.isDeleted,
-                      isRevealed: false,
-                    })
+                {commentsState.page.items.length > 0 ? (
+                  <ul className="profile-lightbox-comment-list">
+                    {commentsState.page.items.map((comment) => {
+                      const commentAuthorName = comment.author.name || 'unknown-agent'
+                      const presentation = getCommentPresentation({
+                        body: comment.body,
+                        isHidden: comment.isHiddenByPostOwner,
+                        isDeleted: comment.isDeleted,
+                        isRevealed: false,
+                      })
 
-                    return (
-                      <li key={comment.id}>
-                        <p className="profile-lightbox-comment-head">
-                          <button
-                            type="button"
-                            className="profile-lightbox-comment-author"
-                            onClick={() => onOpenAuthorProfile(commentAuthorName)}
-                            aria-label={`Open profile for ${commentAuthorName}`}
-                          >
-                            {comment.author.avatarUrl ? (
-                              <img
-                                src={comment.author.avatarUrl}
-                                alt={`${commentAuthorName} avatar`}
-                                className="profile-lightbox-comment-avatar"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <span
-                                className="profile-lightbox-comment-avatar profile-lightbox-comment-avatar-fallback"
-                                aria-hidden="true"
-                              >
-                                {commentAuthorName[0]?.toUpperCase() ?? '?'}
-                              </span>
-                            )}
-                            <strong>{commentAuthorName}</strong>
-                            {comment.author.claimed ? (
-                              <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                                {VERIFIED_BADGE}
-                              </span>
-                            ) : null}
-                          </button>
-                          <span>{formatTimestamp(comment.createdAt)}</span>
-                        </p>
-                        <p className="profile-lightbox-comment-body">{presentation.bodyText}</p>
-                      </li>
-                    )
-                  })}
-                </ul>
-              ) : null}
+                      return (
+                        <li key={comment.id}>
+                          <p className="profile-lightbox-comment-head">
+                            <button
+                              type="button"
+                              className="profile-lightbox-comment-author"
+                              onClick={() => onOpenAuthorProfile(commentAuthorName)}
+                              aria-label={`Open profile for ${commentAuthorName}`}
+                            >
+                              {comment.author.avatarUrl ? (
+                                <img
+                                  src={comment.author.avatarUrl}
+                                  alt={`${commentAuthorName} avatar`}
+                                  className="profile-lightbox-comment-avatar"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span
+                                  className="profile-lightbox-comment-avatar profile-lightbox-comment-avatar-fallback"
+                                  aria-hidden="true"
+                                >
+                                  {commentAuthorName[0]?.toUpperCase() ?? '?'}
+                                </span>
+                              )}
+                              <strong>{commentAuthorName}</strong>
+                              {comment.author.claimed ? (
+                                <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                                  {VERIFIED_BADGE}
+                                </span>
+                              ) : null}
+                            </button>
+                            <span>{formatTimestamp(comment.createdAt)}</span>
+                          </p>
+                          <p className="profile-lightbox-comment-body">{presentation.bodyText}</p>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : null}
 
-              {commentsState.status === 'ready' &&
-              commentsState.page.hasMore &&
-              commentsState.page.nextCursor ? (
-                <button
-                  type="button"
-                  className="feed-icon-button"
-                  onClick={() => onLoadMoreComments(commentsState.page.nextCursor as string)}
-                >
-                  Load more comments
-                </button>
-              ) : null}
+                {commentsState.status === 'ready' &&
+                commentsState.page.hasMore &&
+                commentsState.page.nextCursor ? (
+                  <button
+                    type="button"
+                    className="feed-icon-button"
+                    onClick={() => onLoadMoreComments(commentsState.page.nextCursor as string)}
+                  >
+                    Load more comments
+                  </button>
+                ) : null}
+              </div>
             </section>
           </aside>
           </div>
