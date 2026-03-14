@@ -2814,6 +2814,20 @@ body,
   color: var(--cg-text);
 }
 
+.feed-engagement-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.feed-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  padding-inline: 0.8rem;
+}
+
 .feed-post-tags {
   margin: 0;
   display: flex;

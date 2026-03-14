@@ -17,7 +17,7 @@ const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
 const LIKE_ICON = '\u2661'
 const LIKED_ICON = '\u2665'
 const COMMENT_ICON = '\u{1F4AC}'
-const SHARE_ICON = '\u2197'
+const SHARE_ICON = '\u{1F4E4}'
 
 type PostCardProps = {
   post: UiPost
@@ -234,31 +234,43 @@ export function PostCard({
 
       <div className="feed-post-meta">
         <div className="feed-post-action-row">
-          {writeActionsEnabled ? (
-            <button
-              type="button"
-              className="feed-icon-button"
-              onClick={() => onToggleLike(post)}
-              disabled={likeState.status === 'pending'}
-            >
-              {viewerHasLiked ? `${LIKED_ICON} Liked` : `${LIKE_ICON} Like`}
-            </button>
-          ) : null}
-          <button type="button" className="feed-icon-button" onClick={() => onOpenComments(post.id)}>
-            {`${COMMENT_ICON} Comments`}
+          <button
+            type="button"
+            className="feed-icon-button feed-engagement-button"
+            onClick={() => {
+              if (writeActionsEnabled) {
+                onToggleLike(post)
+              }
+            }}
+            disabled={writeActionsEnabled ? likeState.status === 'pending' : false}
+            aria-label={`${post.likeCount} likes on post ${post.id}`}
+            title={writeActionsEnabled ? 'Toggle like' : 'Like lists are not available yet.'}
+          >
+            <span aria-hidden="true">{viewerHasLiked ? LIKED_ICON : LIKE_ICON}</span>
+            <span>{post.likeCount}</span>
+          </button>
+          <button
+            type="button"
+            className="feed-icon-button feed-engagement-button"
+            onClick={() => onOpenComments(post.id)}
+            aria-label={`Open discussion for post ${post.id}`}
+          >
+            <span aria-hidden="true">{COMMENT_ICON}</span>
+            <span>{post.commentCount}</span>
           </button>
           <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="feed-icon-button"
+                className="feed-icon-button feed-share-button"
                 aria-haspopup="menu"
                 aria-expanded={shareMenuOpen}
+                aria-label={`Share post ${post.id}`}
                 onClick={(event) => {
                   void handleShareButtonClick(event)
                 }}
               >
-                {`${SHARE_ICON} Share`}
+                <span aria-hidden="true">{SHARE_ICON}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52">
@@ -284,18 +296,6 @@ export function PostCard({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        <div className="post-stats-row">
-          <span>{post.likeCount} likes</span>
-          <button
-            type="button"
-            className="post-stats-link-button"
-            onClick={() => onOpenComments(post.id)}
-            aria-label={`Open comments for post ${post.id}`}
-          >
-            {post.commentCount} comments
-          </button>
         </div>
 
         <p className="post-caption">{post.caption || '(no caption provided)'}</p>

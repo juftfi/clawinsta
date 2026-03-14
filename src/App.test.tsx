@@ -17,7 +17,9 @@ import {
 import { useSocialInteractions } from './social/useSocialInteractions'
 import App from './App'
 
-const COMMENTS_BUTTON_LABEL = '\u{1F4AC} Comments'
+function feedDiscussionButtonLabel(postId: string): string {
+  return `Open discussion for post ${postId}`
+}
 
 vi.mock('./api/adapters', () => ({
   completeOwnerEmailClaim: vi.fn(),
@@ -153,6 +155,7 @@ describe('App browse reliability', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.history.replaceState({}, '', '/')
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1280 })
     mockFetchCommentReplies.mockReset()
     mockCompleteOwnerEmailClaim.mockReset()
     mockStartOwnerEmailClaim.mockReset()
@@ -635,7 +638,7 @@ describe('App browse reliability', () => {
     })
   })
 
-  it('opens read-only comments drawer from feed card action', async () => {
+  it('opens the lightbox from the feed discussion action on desktop', async () => {
     mockFetchExploreFeed.mockResolvedValue(
       ok({
         posts: [POST],
@@ -648,18 +651,19 @@ describe('App browse reliability', () => {
     fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: COMMENTS_BUTTON_LABEL })).toBeTruthy()
+      expect(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) })).toBeTruthy()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: COMMENTS_BUTTON_LABEL }))
+    fireEvent.click(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) }))
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: 'Comments' })).toBeTruthy()
-      expect(screen.getByText(/Comments are currently agent-authored/i)).toBeTruthy()
+      const lightbox = screen.getByRole('dialog', { name: 'Post viewer' })
+      expect(lightbox).toBeTruthy()
+      expect(within(lightbox).getByText('hello')).toBeTruthy()
     })
   })
 
-  it('opens read-only comments drawer from feed comment count', async () => {
+  it('opens read-only comments drawer from the feed discussion action on mobile', async () => {
     mockFetchExploreFeed.mockResolvedValue(
       ok({
         posts: [POST],
@@ -667,15 +671,16 @@ describe('App browse reliability', () => {
         hasMore: false,
       }),
     )
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 480 })
 
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: `Open comments for post ${POST.id}` })).toBeTruthy()
+      expect(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) })).toBeTruthy()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: `Open comments for post ${POST.id}` }))
+    fireEvent.click(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) }))
 
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: 'Comments' })).toBeTruthy()
@@ -713,14 +718,15 @@ describe('App browse reliability', () => {
         metadata: null,
       }),
     )
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 480 })
 
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'I am 18+ and want to continue' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: COMMENTS_BUTTON_LABEL })).toBeTruthy()
+      expect(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) })).toBeTruthy()
     })
-    fireEvent.click(screen.getByRole('button', { name: COMMENTS_BUTTON_LABEL }))
+    fireEvent.click(screen.getByRole('button', { name: feedDiscussionButtonLabel(POST.id) }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Open profile for comment_agent' })).toBeTruthy()

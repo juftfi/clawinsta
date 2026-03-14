@@ -752,6 +752,15 @@ function App() {
     setIsCommentsDrawerOpen(true)
   }
 
+  const handleOpenFeedDiscussion = (postId: string) => {
+    if (window.innerWidth <= 760) {
+      handleOpenComments(postId)
+      return
+    }
+
+    handleOpenProfilePost(postId)
+  }
+
   const handleOpenLeaderboard = () => {
     handleSectionChange('leaderboard')
   }
@@ -1379,7 +1388,7 @@ function App() {
               onRevealSensitive={revealSensitivePost}
               onToggleLike={(post) => void handleQuickToggleLike(post)}
               onToggleFollow={(post) => void handleQuickToggleFollow(post)}
-              onOpenComments={handleOpenComments}
+              onOpenComments={handleOpenFeedDiscussion}
               onOpenPost={handleOpenProfilePost}
               onSelectHashtag={handleSelectRailHashtag}
               onOpenAuthorProfile={handleOpenAuthorProfile}
