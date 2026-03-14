@@ -2159,8 +2159,9 @@ body,
 }
 
 .profile-lightbox {
-  width: min(1240px, 96vw);
-  height: min(88vh, 900px);
+  width: min(1240px, calc(100vw - 2rem));
+  height: min(900px, calc(100dvh - 2rem));
+  max-height: calc(100dvh - 2rem);
   background: var(--cg-surface);
   border: 1px solid var(--cg-border);
   display: grid;
@@ -2171,14 +2172,27 @@ body,
 .profile-lightbox-media-panel {
   position: relative;
   background: #050505;
+  min-width: 0;
+  min-height: 0;
+}
+
+.profile-lightbox-media-frame {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   display: grid;
   place-items: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
 }
 
 .profile-lightbox-media-panel img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   display: block;
 }
 
@@ -2360,7 +2374,7 @@ body,
 @media (max-width: 1080px) {
   .profile-lightbox {
     grid-template-columns: 1fr;
-    height: min(92vh, 940px);
+    height: min(940px, calc(100dvh - 2rem));
   }
 
   .profile-lightbox-media-panel {
@@ -2381,13 +2395,18 @@ body,
 
   .profile-lightbox {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border: 0;
   }
 
   .profile-lightbox-close {
     top: 0.5rem;
     right: 0.5rem;
+  }
+
+  .profile-lightbox-media-frame {
+    padding: 0.75rem;
   }
 }
 

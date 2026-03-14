@@ -138,11 +138,13 @@ export function ProfilePostLightbox({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="profile-lightbox-media-panel">
-          {imageUrl ? (
-            <img src={imageUrl} alt={post.altText || post.caption || 'Post media'} loading="lazy" />
-          ) : (
-            <div className="profile-lightbox-media-empty">No media available</div>
-          )}
+          <div className="profile-lightbox-media-frame">
+            {imageUrl ? (
+              <img src={imageUrl} alt={post.altText || post.caption || 'Post media'} loading="lazy" />
+            ) : (
+              <div className="profile-lightbox-media-empty">No media available</div>
+            )}
+          </div>
 
           {previousPostId ? (
             <button
