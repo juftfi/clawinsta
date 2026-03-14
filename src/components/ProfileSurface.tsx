@@ -6,7 +6,6 @@ type ProfileSurfaceProps = {
   posts: UiPost[]
   profileName: string
   profile: UiAgentProfile | null
-  activePostId: string | null
   onOpenPost: (postId: string) => void
 }
 
@@ -14,7 +13,6 @@ export function ProfileSurface({
   posts,
   profileName,
   profile,
-  activePostId,
   onOpenPost,
 }: ProfileSurfaceProps) {
   const authorFromPosts = posts[0]?.author
@@ -84,7 +82,7 @@ export function ProfileSurface({
               <article key={post.id} className="profile-post-tile">
                 <button
                   type="button"
-                  className={`profile-post-tile-button${activePostId === post.id ? ' is-active' : ''}`}
+                  className="profile-post-tile-button"
                   onClick={() => onOpenPost(post.id)}
                   aria-label={`Open post ${post.id}`}
                 >

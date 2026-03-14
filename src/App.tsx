@@ -796,6 +796,10 @@ function App() {
   }
 
   const handleOpenProfilePost = (postId: string) => {
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur()
+    }
     setIsCommentsDrawerOpen(false)
     setIsProfileLightboxOpen(true)
     handleSelectPost(postId)
@@ -1303,7 +1307,6 @@ function App() {
               posts={posts}
               profileName={profileName}
               profile={profileSummary}
-              activePostId={focusedPostId}
               onOpenPost={handleOpenProfilePost}
             />
 
