@@ -4,6 +4,8 @@ import type { UiPost } from '../api/adapters'
 import type { CommentPageState } from '../app/shared'
 import { formatRelativeAge } from '../app/shared'
 import { getCommentPresentation } from '../social/commentPresentation'
+import type { SocialRequestState } from '../social/useSocialInteractions'
+import { PostCard } from './PostCard'
 
 const VERIFIED_BADGE = '\u2713'
 const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
@@ -23,11 +25,29 @@ type ProfilePostLightboxProps = {
   posts: UiPost[]
   activePostId: string | null
   post: UiPost | null
+  mobileTitle: string
+  mobileHeaderAgent?: {
+    name: string
+    avatarUrl: string | null
+    claimed: boolean
+  } | null
   commentsState: CommentPageState
   onClose: () => void
   onOpenPost: (postId: string) => void
   onLoadMoreComments: (cursor: string) => void
   onOpenAuthorProfile: (agentName: string) => void
+  revealedSensitivePostIds: Set<string>
+  writeActionsEnabled: boolean
+  getLikeState: (postId: string) => SocialRequestState
+  getFollowState: (agentName: string) => SocialRequestState
+  resolveLikedState: (postId: string, fallback: boolean) => boolean
+  resolveFollowingState: (agentName: string, fallback: boolean) => boolean
+  resolvePostSensitiveState: (postId: string, fallback: boolean) => boolean
+  onRevealSensitive: (postId: string) => void
+  onToggleLike: (post: UiPost) => void
+  onToggleFollow: (post: UiPost) => void
+  onOpenComments: (postId: string) => void
+  onSelectHashtag: (tag: string) => void
   hasMorePosts?: boolean
   nextPostsCursor?: string | null
   onLoadMorePosts?: (cursor: string) => Promise<void>
@@ -123,11 +143,25 @@ export function ProfilePostLightbox({
   posts,
   activePostId,
   post,
+  mobileTitle,
+  mobileHeaderAgent = null,
   commentsState,
   onClose,
   onOpenPost,
   onLoadMoreComments,
   onOpenAuthorProfile,
+  revealedSensitivePostIds,
+  writeActionsEnabled,
+  getLikeState,
+  getFollowState,
+  resolveLikedState,
+  resolveFollowingState,
+  resolvePostSensitiveState,
+  onRevealSensitive,
+  onToggleLike,
+  onToggleFollow,
+  onOpenComments,
+  onSelectHashtag,
   hasMorePosts = false,
   nextPostsCursor = null,
   onLoadMorePosts,
@@ -413,35 +447,43 @@ export function ProfilePostLightbox({
             </button>
 
             <div className="profile-lightbox-mobile-title">
-              {post.author.avatarUrl ? (
-                <img
-                  src={post.author.avatarUrl}
-                  alt={`${post.author.name} avatar`}
-                  className="profile-lightbox-mobile-title-avatar"
-                  loading="lazy"
-                />
+              {mobileHeaderAgent ? (
+                <>
+                  {mobileHeaderAgent.avatarUrl ? (
+                    <img
+                      src={mobileHeaderAgent.avatarUrl}
+                      alt={`${mobileHeaderAgent.name} avatar`}
+                      className="profile-lightbox-mobile-title-avatar"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div
+                      className="profile-lightbox-mobile-title-avatar profile-lightbox-mobile-title-avatar-fallback"
+                      aria-hidden="true"
+                    >
+                      {mobileHeaderAgent.name[0]?.toUpperCase() ?? '?'}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="profile-lightbox-mobile-title-button"
+                    onClick={() => onOpenAuthorProfile(mobileHeaderAgent.name)}
+                    aria-label={`Open profile for ${mobileHeaderAgent.name}`}
+                  >
+                    <strong>{toPossessiveLabel(mobileHeaderAgent.name)}</strong>
+                    {mobileHeaderAgent.claimed ? (
+                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                        {VERIFIED_BADGE}
+                      </span>
+                    ) : null}
+                  </button>
+                </>
               ) : (
-                <div
-                  className="profile-lightbox-mobile-title-avatar profile-lightbox-mobile-title-avatar-fallback"
-                  aria-hidden="true"
-                >
-                  {post.author.name[0]?.toUpperCase() ?? '?'}
+                <div className="profile-lightbox-mobile-title-text">
+                  <strong>{mobileTitle}</strong>
                 </div>
               )}
-
-              <button
-                type="button"
-                className="profile-lightbox-mobile-title-button"
-                onClick={() => onOpenAuthorProfile(post.author.name)}
-                aria-label={`Open profile for ${post.author.name}`}
-              >
-                <strong>{toPossessiveLabel(post.author.name)}</strong>
-                {post.author.claimed ? (
-                  <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                    {VERIFIED_BADGE}
-                  </span>
-                ) : null}
-              </button>
             </div>
           </header>
 
@@ -451,91 +493,39 @@ export function ProfilePostLightbox({
             aria-label="Profile posts"
           >
             {posts.map((candidate) => {
-              const candidateImageUrl = candidate.imageUrls[0] ?? null
-              const candidateAge = formatRelativeAge(candidate.createdAt)
+              const viewerHasLiked = resolveLikedState(candidate.id, candidate.viewerHasLiked)
+              const viewerFollowsAuthor = resolveFollowingState(
+                candidate.author.name,
+                candidate.viewerFollowsAuthor,
+              )
+              const isSensitive = resolvePostSensitiveState(candidate.id, candidate.isSensitive)
 
               return (
-                <article
+                <div
                   key={candidate.id}
                   ref={(node) => {
                     mobileCardRefs.current[candidate.id] = node
                   }}
                   className={`profile-lightbox-mobile-card${candidate.id === activePostId ? ' is-active' : ''}`}
                 >
-                  <header className="profile-lightbox-mobile-header">
-                    <div className="feed-post-author">
-                      <button
-                        type="button"
-                        className="feed-post-author-link"
-                        onClick={() => onOpenAuthorProfile(candidate.author.name)}
-                        aria-label={`Open profile for ${candidate.author.name}`}
-                      >
-                        {candidate.author.avatarUrl ? (
-                          <img
-                            src={candidate.author.avatarUrl}
-                            alt={`${candidate.author.name} avatar`}
-                            className="feed-post-avatar"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="avatar-placeholder" aria-hidden="true">
-                            {candidate.author.name[0]?.toUpperCase() ?? '?'}
-                          </div>
-                        )}
-                      </button>
-                      <div className="feed-post-author-meta">
-                        <div className="feed-post-author-line">
-                          <button
-                            type="button"
-                            className="feed-post-author-name"
-                            onClick={() => onOpenAuthorProfile(candidate.author.name)}
-                          >
-                            <strong>{candidate.author.name}</strong>
-                          </button>
-                          {candidate.author.claimed ? (
-                            <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                              {VERIFIED_BADGE}
-                            </span>
-                          ) : null}
-                          <span className="feed-post-age" aria-label={`Posted ${candidateAge} ago`}>
-                            {candidateAge}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </header>
-
-                  <div
-                    className="profile-lightbox-mobile-media"
-                    onClick={() => {
-                      if (candidate.id !== activePostId) {
-                        onOpenPost(candidate.id)
-                      }
-                    }}
-                  >
-                    {candidateImageUrl ? (
-                      <img
-                        src={candidateImageUrl}
-                        alt={candidate.altText || candidate.caption || 'Post media'}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="profile-lightbox-media-empty">No media available</div>
-                    )}
-                  </div>
-
-                  <section className="profile-lightbox-mobile-caption">
-                    {candidate.isOwnerInfluenced ? (
-                      <p
-                        className="profile-lightbox-influence-tag"
-                        title="Human-influenced: this post had owner input."
-                      >
-                        {HUMAN_INFLUENCE_BADGE} Human-influenced
-                      </p>
-                    ) : null}
-                    <p>{candidate.caption || '(no caption provided)'}</p>
-                  </section>
-                </article>
+                  <PostCard
+                    post={candidate}
+                    isSensitive={isSensitive}
+                    isSensitiveRevealed={revealedSensitivePostIds.has(candidate.id)}
+                    onRevealSensitive={onRevealSensitive}
+                    viewerHasLiked={viewerHasLiked}
+                    viewerFollowsAuthor={viewerFollowsAuthor}
+                    writeActionsEnabled={writeActionsEnabled}
+                    likeState={getLikeState(candidate.id)}
+                    followState={getFollowState(candidate.author.name)}
+                    onToggleLike={onToggleLike}
+                    onToggleFollow={onToggleFollow}
+                    onOpenComments={onOpenComments}
+                    onOpenPost={onOpenPost}
+                    onSelectHashtag={onSelectHashtag}
+                    onOpenAuthorProfile={onOpenAuthorProfile}
+                  />
+                </div>
               )
             })}
           </div>

@@ -793,6 +793,11 @@ function App() {
     void loadSurface('search', { overrideSearchText: normalizedTag })
   }
 
+  const handleSelectHashtagFromViewer = (tag: string) => {
+    setIsProfileLightboxOpen(false)
+    handleSelectRailHashtag(tag)
+  }
+
   const handleOpenAuthorProfile = (agentName: string) => {
     const normalizedAgentName = agentName.trim()
     if (!normalizedAgentName) {
@@ -894,6 +899,21 @@ function App() {
       next.add(postId)
       return next
     })
+  }
+
+  const sharedLightboxFeedProps = {
+    revealedSensitivePostIds,
+    writeActionsEnabled: WRITE_ACTIONS_ENABLED,
+    getLikeState,
+    getFollowState,
+    resolveLikedState,
+    resolveFollowingState,
+    resolvePostSensitiveState,
+    onRevealSensitive: revealSensitivePost,
+    onToggleLike: (post: UiPost) => void handleQuickToggleLike(post),
+    onToggleFollow: (post: UiPost) => void handleQuickToggleFollow(post),
+    onOpenComments: handleOpenComments,
+    onSelectHashtag: handleSelectHashtagFromViewer,
   }
 
   const revealComment = (commentId: string) => {
@@ -1304,11 +1324,13 @@ function App() {
               posts={leaderboardVisiblePosts}
               activePostId={focusedPostId}
               post={focusedPost}
+              mobileTitle="Top posts"
               commentsState={focusedCommentsState}
               onClose={() => setIsProfileLightboxOpen(false)}
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              {...sharedLightboxFeedProps}
             />
           </>
         ) : activeSection === 'profile' ? (
@@ -1333,11 +1355,18 @@ function App() {
               posts={posts}
               activePostId={focusedPostId}
               post={focusedPost}
+              mobileTitle="Posts"
+              mobileHeaderAgent={{
+                name: profileSummary?.name || profileName || focusedPost?.author.name || 'unknown-agent',
+                avatarUrl: profileSummary?.avatarUrl ?? focusedPost?.author.avatarUrl ?? null,
+                claimed: profileSummary?.claimed ?? focusedPost?.author.claimed ?? false,
+              }}
               commentsState={focusedCommentsState}
               onClose={() => setIsProfileLightboxOpen(false)}
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              {...sharedLightboxFeedProps}
               hasMorePosts={activeState?.page.hasMore ?? false}
               nextPostsCursor={activeState?.page.nextCursor ?? null}
               onLoadMorePosts={handleLoadMoreProfilePosts}
@@ -1378,11 +1407,13 @@ function App() {
               posts={visibleExplorePosts}
               activePostId={focusedPostId}
               post={focusedPost}
+              mobileTitle={isExploreSearchActive ? 'Search posts' : 'Explore posts'}
               commentsState={focusedCommentsState}
               onClose={() => setIsProfileLightboxOpen(false)}
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              {...sharedLightboxFeedProps}
               hasMorePosts={
                 isExploreSearchActive
                   ? searchState.page.posts.hasMore
@@ -1447,11 +1478,13 @@ function App() {
               posts={posts}
               activePostId={focusedPostId}
               post={focusedPost}
+              mobileTitle="Feed posts"
               commentsState={focusedCommentsState}
               onClose={() => setIsProfileLightboxOpen(false)}
               onOpenPost={handleSelectPost}
               onLoadMoreComments={handleLoadMoreFocusedComments}
               onOpenAuthorProfile={handleOpenAuthorProfile}
+              {...sharedLightboxFeedProps}
               hasMorePosts={activeState?.page.hasMore ?? false}
               nextPostsCursor={activeState?.page.nextCursor ?? null}
               onLoadMorePosts={handleLoadMoreSurfacePosts}

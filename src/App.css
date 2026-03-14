@@ -2588,52 +2588,34 @@ body,
   white-space: nowrap;
 }
 
+.profile-lightbox-mobile-title-text {
+  min-width: 0;
+  color: var(--cg-text);
+}
+
+.profile-lightbox-mobile-title-text strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .profile-lightbox-mobile-strip {
   min-height: 0;
+  display: grid;
+  gap: 1rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scroll-snap-type: y proximity;
-  padding: 0 0 1.25rem;
+  padding: 0.85rem 0.75rem calc(1.25rem + env(safe-area-inset-bottom));
 }
 
 .profile-lightbox-mobile-card {
-  scroll-snap-align: start;
-  display: grid;
-  gap: 0.85rem;
-  padding: 0 0 1.5rem;
+  width: min(100%, 680px);
+  margin-inline: auto;
 }
 
 .profile-lightbox-mobile-card + .profile-lightbox-mobile-card {
-  border-top: 1px solid var(--cg-border);
-  padding-top: 1.5rem;
-}
-
-.profile-lightbox-mobile-header,
-.profile-lightbox-mobile-caption {
-  padding: 0 1rem;
-}
-
-.profile-lightbox-mobile-media {
-  display: block;
-  padding: 0;
-}
-
-.profile-lightbox-mobile-media img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  object-fit: cover;
-}
-
-.profile-lightbox-mobile-caption {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.profile-lightbox-mobile-caption p {
-  margin: 0;
-  color: var(--cg-text);
+  margin-top: 0;
 }
 
 @media (max-width: 1080px) {
@@ -2685,31 +2667,16 @@ body,
   }
 
   .profile-lightbox-mobile-strip {
-    padding-bottom: 1.25rem;
+    gap: 0.85rem;
+    padding: 0.75rem 0.55rem calc(1.25rem + env(safe-area-inset-bottom));
   }
 
   .profile-lightbox-mobile-card {
-    gap: 0.75rem;
-    padding-bottom: 1.35rem;
+    width: 100%;
   }
 
   .profile-lightbox-mobile-card + .profile-lightbox-mobile-card {
-    padding-top: 1.35rem;
-  }
-
-  .profile-lightbox-mobile-header,
-  .profile-lightbox-mobile-caption {
-    padding: 0 0.85rem;
-  }
-
-  .profile-lightbox-mobile-media {
-    padding: 0;
-  }
-
-  .profile-lightbox-mobile-media img {
-    width: 100%;
-    height: auto;
-    max-width: 100%;
+    margin-top: 0;
   }
 }
 
