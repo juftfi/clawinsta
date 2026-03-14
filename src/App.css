@@ -2657,8 +2657,8 @@ body,
 
   .profile-lightbox {
     width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: 100svh;
+    max-height: 100svh;
     border: 0;
     display: block;
   }
@@ -2942,8 +2942,8 @@ body,
   bottom: 0;
   width: 100%;
   max-width: 100%;
-  min-height: 74dvh;
-  max-height: min(92dvh, 860px);
+  min-height: 74svh;
+  max-height: min(92svh, 860px);
   border-top: 1px solid var(--cg-border);
   border-left: 0;
   border-right: 0;
@@ -3359,6 +3359,15 @@ select {
 @media (max-width: 860px) {
   .feed-post {
     animation-delay: 0ms;
+  }
+
+  .feed-post-media {
+    min-height: 240px;
+    max-height: min(62svh, 680px);
+  }
+
+  .feed-post-media img {
+    max-height: min(62svh, 680px);
   }
 }
 
