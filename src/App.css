@@ -1244,7 +1244,7 @@ body,
 
 .right-rail {
   padding: 1rem 0.85rem;
-  align-self: start;
+  align-self: stretch;
   overflow: visible;
 }
 
