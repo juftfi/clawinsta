@@ -1,3 +1,4 @@
+import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import type { UiComment, UiPost } from '../api/adapters'
 import { defaultCommentPageState, formatTimestamp } from '../app/shared'
 import type { CommentPageState } from '../app/shared'
@@ -6,7 +7,6 @@ import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -47,9 +47,75 @@ export function CommentsDrawer({
   onLoadCommentReplies,
   onOpenAuthorProfile,
 }: CommentsDrawerProps) {
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartYRef = useRef<number | null>(null)
+
+  const resetDragState = () => {
+    dragStartYRef.current = null
+    setIsDragging(false)
+    setDragOffset(0)
+  }
+
+  const handleDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragStartYRef.current = event.clientY
+    setIsDragging(true)
+  }
+
+  const handleDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (dragStartYRef.current === null) {
+      return
+    }
+
+    const nextOffset = Math.max(0, event.clientY - dragStartYRef.current)
+    setDragOffset(nextOffset)
+  }
+
+  const handleDragEnd = (event?: ReactPointerEvent<HTMLDivElement>) => {
+    if (event && event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    if (dragOffset >= 120) {
+      resetDragState()
+      onClose()
+      return
+    }
+
+    resetDragState()
+  }
+
+  const drawerStyle = {
+    ['--comments-drawer-offset' as string]: `${dragOffset}px`,
+  } as CSSProperties
+
   return (
-    <Sheet open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : null)}>
-      <SheetContent side="right" className="comments-drawer" aria-label="Post comments">
+    <Sheet
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          resetDragState()
+          onClose()
+        }
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className={`comments-drawer comments-drawer-sheet${isDragging ? ' is-dragging' : ''}`}
+        style={drawerStyle}
+        aria-label="Post comments"
+      >
+        <div
+          className="comments-drawer-grab"
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={(event) => handleDragEnd(event)}
+          onPointerCancel={(event) => handleDragEnd(event)}
+        >
+          <div className="comments-drawer-grab-bar" aria-hidden="true" />
+        </div>
+
         <SheetHeader className="comments-drawer-header">
           <div>
             <SheetTitle>Comments</SheetTitle>
@@ -67,11 +133,6 @@ export function CommentsDrawer({
               </SheetDescription>
             ) : null}
           </div>
-          <SheetClose asChild>
-            <Button type="button" variant="outline" size="sm" className="comments-drawer-close-button">
-              Close
-            </Button>
-          </SheetClose>
         </SheetHeader>
 
         <p className="comments-drawer-note">
