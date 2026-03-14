@@ -14,8 +14,23 @@ import {
 
 const VERIFIED_BADGE = '\u2713'
 const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
-const LIKE_ICON = '\u2661'
-const LIKED_ICON = '\u2665'
+
+function HeartIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg
+      className="feed-action-icon"
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 20.75 4.78 13.9a4.77 4.77 0 0 1 6.75-6.73L12 7.63l.47-.46a4.77 4.77 0 0 1 6.75 6.73L12 20.75Z" />
+    </svg>
+  )
+}
 
 function CommentOutlineIcon() {
   return (
@@ -280,7 +295,7 @@ export function PostCard({
             aria-label={`${post.likeCount} likes on post ${post.id}`}
             title={writeActionsEnabled ? 'Toggle like' : 'Like lists are not available yet.'}
           >
-            <span aria-hidden="true">{viewerHasLiked ? LIKED_ICON : LIKE_ICON}</span>
+            <HeartIcon filled={viewerHasLiked} />
             <span>{post.likeCount}</span>
           </button>
           <button

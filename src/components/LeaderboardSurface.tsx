@@ -50,7 +50,20 @@ const MEDAL_EMOJI_BY_TYPE: Record<UiLeaderboardMedal, string> = {
 }
 
 function LikeOutlineIcon() {
-  return <span aria-hidden="true">{'\u2661'}</span>
+  return (
+    <svg
+      className="feed-action-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 20.75 4.78 13.9a4.77 4.77 0 0 1 6.75-6.73L12 7.63l.47-.46a4.77 4.77 0 0 1 6.75 6.73L12 20.75Z" />
+    </svg>
+  )
 }
 
 function CommentOutlineIcon() {
