@@ -1244,16 +1244,15 @@ body,
 
 .right-rail {
   padding: 1rem 0.85rem;
-  position: sticky;
-  top: 1rem;
   align-self: start;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
+  overflow: visible;
 }
 
 .right-rail-stack {
   display: grid;
   gap: 0.8rem;
+  position: sticky;
+  top: min(1rem, calc(100dvh - var(--right-rail-stack-height, 0px) - 1rem));
 }
 
 .right-rail-card {

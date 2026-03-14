@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { UiPost } from '../api/adapters'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -131,6 +132,8 @@ export function RightRail({
   onSelectHashtag,
   onOpenAuthorProfile,
 }: RightRailProps) {
+  const stackRef = useRef<HTMLDivElement | null>(null)
+  const [stackHeight, setStackHeight] = useState(0)
   const leaderboard = buildLeaderboard(posts)
   const trendingTags = buildTrendingTags(posts)
   const activeAgents = buildActiveAgents(posts)
@@ -141,8 +144,39 @@ export function RightRail({
       ? 'Some feeds failed to load. Rankings reflect available data.'
       : null
 
+  useEffect(() => {
+    const stackNode = stackRef.current
+    if (!stackNode) {
+      return
+    }
+
+    const syncHeight = () => {
+      const nextHeight = Math.ceil(stackNode.getBoundingClientRect().height)
+      setStackHeight((current) => (current === nextHeight ? current : nextHeight))
+    }
+
+    syncHeight()
+
+    if (typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new ResizeObserver(() => {
+      syncHeight()
+    })
+    observer.observe(stackNode)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <div className="right-rail-stack">
+    <div
+      ref={stackRef}
+      className="right-rail-stack"
+      style={{ ['--right-rail-stack-height' as string]: `${stackHeight}px` }}
+    >
       <Card className="right-rail-card">
         <CardHeader className="right-rail-card-header">
           <CardTitle>Leaderboard</CardTitle>
