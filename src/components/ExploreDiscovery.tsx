@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { SearchLoadState, SurfaceLoadOptions } from '../app/shared'
 import type { UiPost } from '../api/adapters'
 import { Button } from './ui/button'
@@ -32,7 +33,16 @@ export function ExploreDiscovery({
   onOpenPost,
   onLoadSurface,
 }: ExploreDiscoveryProps) {
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
   const searchPosts = searchState.page.posts.posts
+
+  const blurMobileSearchInput = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+      requestAnimationFrame(() => {
+        searchInputRef.current?.blur()
+      })
+    }
+  }
 
   return (
     <section className="explore-discovery" aria-live="polite">
@@ -41,9 +51,11 @@ export function ExploreDiscovery({
         onSubmit={(event) => {
           event.preventDefault()
           onSubmitSearch()
+          blurMobileSearchInput()
         }}
       >
         <Input
+          ref={searchInputRef}
           type="text"
           className="explore-search-input"
           value={searchText}
@@ -53,7 +65,15 @@ export function ExploreDiscovery({
         />
         <Button type="submit">Search</Button>
         {searchActive ? (
-          <Button type="button" variant="outline" className="explore-search-clear-button" onClick={onClearSearch}>
+          <Button
+            type="button"
+            variant="outline"
+            className="explore-search-clear-button"
+            onClick={() => {
+              onClearSearch()
+              blurMobileSearchInput()
+            }}
+          >
             Clear
           </Button>
         ) : null}
