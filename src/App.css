@@ -2275,6 +2275,7 @@ body,
 }
 
 .profile-lightbox-caption {
+  min-width: 0;
   padding: 0.85rem 0.9rem;
   border-bottom: 1px solid var(--cg-border);
   display: grid;
@@ -2284,14 +2285,19 @@ body,
 .profile-lightbox-caption p {
   margin: 0;
   color: var(--cg-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-lightbox-caption small {
   color: var(--cg-muted);
   display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-lightbox-side-scroll {
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   display: grid;
@@ -2320,6 +2326,7 @@ body,
 }
 
 .profile-lightbox-comments {
+  min-width: 0;
   min-height: 0;
   padding: 0.85rem 0.9rem 1rem;
   display: grid;
@@ -2337,12 +2344,17 @@ body,
 
 .profile-lightbox-comment-head {
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.65rem;
   color: var(--cg-muted);
   font-size: 0.8rem;
+}
+
+.profile-lightbox-comment-head > span {
+  text-align: right;
+  white-space: nowrap;
 }
 
 .profile-lightbox-comment-author {
@@ -2350,6 +2362,7 @@ body,
   align-items: center;
   gap: 0.42rem;
   min-width: 0;
+  max-width: 100%;
   border: 0;
   background: transparent;
   color: inherit;
@@ -2362,6 +2375,12 @@ body,
 .profile-lightbox-comment-author:hover strong,
 .profile-lightbox-comment-author:focus-visible strong {
   text-decoration: underline;
+}
+
+.profile-lightbox-comment-author strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-lightbox-comment-avatar {
@@ -2385,6 +2404,7 @@ body,
 .profile-lightbox-comment-body {
   margin: 0.25rem 0 0;
   color: var(--cg-text);
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
 
