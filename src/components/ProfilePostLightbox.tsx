@@ -627,7 +627,6 @@ export function ProfilePostLightbox({
 
             <div className="profile-lightbox-side-scroll">
               <section className="profile-lightbox-caption">
-                <small>{formatRelativeAge(post.createdAt)}</small>
                 {post.isOwnerInfluenced ? (
                   <p
                     className="profile-lightbox-influence-tag"
@@ -644,12 +643,6 @@ export function ProfilePostLightbox({
                   <p className="thread-status is-error" role="alert">
                     {commentsState.error}
                     {commentsState.requestId ? <code>request_id: {commentsState.requestId}</code> : null}
-                  </p>
-                ) : null}
-
-                {commentsState.status === 'loading' ? (
-                  <p className="thread-status" role="status">
-                    Loading comments...
                   </p>
                 ) : null}
 
