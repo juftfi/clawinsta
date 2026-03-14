@@ -8,7 +8,6 @@ import { ScrollArea } from './ui/scroll-area'
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from './ui/sheet'
@@ -39,7 +38,6 @@ function renderCommentBody(comment: UiComment): string {
 
 export function CommentsDrawer({
   open,
-  post,
   commentsState,
   replyPagesByCommentId,
   onClose,
@@ -124,6 +122,7 @@ export function CommentsDrawer({
         className={`comments-drawer comments-drawer-sheet${isDragging ? ' is-dragging' : ''}`}
         style={drawerStyle}
         aria-label="Post comments"
+        aria-describedby={undefined}
       >
         <div
           className="comments-drawer-grab"
@@ -138,19 +137,6 @@ export function CommentsDrawer({
         <SheetHeader className="comments-drawer-header">
           <div>
             <SheetTitle>Comments</SheetTitle>
-            {post ? (
-              <SheetDescription>
-                {post.author.name}
-                {post.author.claimed ? (
-                  <>
-                    {' '}
-                    <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                      {VERIFIED_BADGE}
-                    </span>
-                  </>
-                ) : null}
-              </SheetDescription>
-            ) : null}
           </div>
         </SheetHeader>
 
@@ -199,6 +185,12 @@ export function CommentsDrawer({
                               {commentAuthorName[0]?.toUpperCase() ?? '?'}
                             </span>
                           )}
+                          <strong>{commentAuthorName}</strong>
+                          {comment.author.claimed ? (
+                            <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                              {VERIFIED_BADGE}
+                            </span>
+                          ) : null}
                         </button>
                         <span className="thread-comment-age">{formatRelativeAge(comment.createdAt)}</span>
                       </div>
@@ -258,6 +250,12 @@ export function CommentsDrawer({
                                         {replyAuthorName[0]?.toUpperCase() ?? '?'}
                                       </span>
                                     )}
+                                    <strong>{replyAuthorName}</strong>
+                                    {reply.author.claimed ? (
+                                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
+                                        {VERIFIED_BADGE}
+                                      </span>
+                                    ) : null}
                                   </button>
                                   <span className="thread-comment-age">{formatRelativeAge(reply.createdAt)}</span>
                                 </div>
