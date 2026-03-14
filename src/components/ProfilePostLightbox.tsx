@@ -559,7 +559,9 @@ export function ProfilePostLightbox({
                 onClick={() => onOpenPost(previousPostId)}
                 aria-label="Previous post"
               >
-                {'\u2039'}
+                <span className="profile-lightbox-nav-icon" aria-hidden="true">
+                  {'\u2039'}
+                </span>
               </button>
             ) : null}
 
@@ -578,7 +580,9 @@ export function ProfilePostLightbox({
                 aria-label="Next post"
                 disabled={isLoadingMorePosts}
               >
-                {'\u203A'}
+                <span className="profile-lightbox-nav-icon" aria-hidden="true">
+                  {'\u203A'}
+                </span>
               </button>
             ) : null}
           </div>

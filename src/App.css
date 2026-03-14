@@ -2219,15 +2219,28 @@ body,
   transform: translateY(-50%);
   width: 42px;
   height: 42px;
+  padding: 0;
   border: 1px solid var(--cg-border);
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
   font-size: 1.8rem;
   line-height: 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+}
+
+.profile-lightbox-nav-icon {
+  display: block;
+  line-height: 1;
+  transform: translateY(-0.06em);
+}
+
+.profile-lightbox-nav:hover:not(:disabled) {
+  border-color: var(--cg-accent);
+  color: var(--cg-accent);
 }
 
 .profile-lightbox-nav.is-prev {
