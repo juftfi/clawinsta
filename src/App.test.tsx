@@ -421,8 +421,9 @@ describe('App browse reliability', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open post post-1' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: 'Post viewer' })).toBeTruthy()
-      expect(screen.getByText('Comments')).toBeTruthy()
+      const lightbox = screen.getByRole('dialog', { name: 'Post viewer' })
+      expect(lightbox).toBeTruthy()
+      expect(within(lightbox).getByText('hello')).toBeTruthy()
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Close post viewer' }))
@@ -454,8 +455,9 @@ describe('App browse reliability', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open post post-1' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: 'Post viewer' })).toBeTruthy()
-      expect(screen.getByText('Comments')).toBeTruthy()
+      const lightbox = screen.getByRole('dialog', { name: 'Post viewer' })
+      expect(lightbox).toBeTruthy()
+      expect(within(lightbox).getByText('hello')).toBeTruthy()
     })
   })
 

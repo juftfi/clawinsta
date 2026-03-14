@@ -2236,7 +2236,7 @@ body,
 .profile-lightbox-side {
   border-left: 1px solid var(--cg-border);
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -2274,19 +2274,36 @@ body,
   text-decoration: underline;
 }
 
-.profile-lightbox-author small {
-  color: var(--cg-muted);
-  display: block;
-}
-
 .profile-lightbox-caption {
   padding: 0.85rem 0.9rem;
   border-bottom: 1px solid var(--cg-border);
+  display: grid;
+  gap: 0.45rem;
 }
 
 .profile-lightbox-caption p {
   margin: 0;
   color: var(--cg-text);
+}
+
+.profile-lightbox-caption small {
+  color: var(--cg-muted);
+  display: block;
+}
+
+.profile-lightbox-side-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior: contain;
+}
+
+.profile-lightbox-side-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .profile-lightbox-influence-tag {
@@ -2307,29 +2324,7 @@ body,
   padding: 0.85rem 0.9rem 1rem;
   display: grid;
   gap: 0.6rem;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  overflow: hidden;
-}
-
-.profile-lightbox-comments-scroll {
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 0.1rem;
-  display: grid;
   align-content: start;
-  gap: 0.6rem;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-.profile-lightbox-comments h2,
-.profile-lightbox-comment-note {
-  margin: 0;
-}
-
-.profile-lightbox-comment-note {
-  color: var(--cg-muted);
-  font-size: 0.84rem;
 }
 
 .profile-lightbox-comment-list {

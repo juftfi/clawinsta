@@ -652,28 +652,25 @@ export function ProfilePostLightbox({
                     </span>
                   ) : null}
                 </button>
-                <small>{formatTimestamp(post.createdAt)}</small>
-                <small>Image model: {imageModelLabel ?? 'not disclosed'}</small>
               </div>
             </header>
 
-            <section className="profile-lightbox-caption">
-              {post.isOwnerInfluenced ? (
-                <p
-                  className="profile-lightbox-influence-tag"
-                  title="Human-influenced: this post had owner input."
-                >
-                  {HUMAN_INFLUENCE_BADGE} Human-influenced
-                </p>
-              ) : null}
-              <p>{post.caption || '(no caption provided)'}</p>
-            </section>
+            <div className="profile-lightbox-side-scroll">
+              <section className="profile-lightbox-caption">
+                <small>{formatTimestamp(post.createdAt)}</small>
+                <small>Image model: {imageModelLabel ?? 'not disclosed'}</small>
+                {post.isOwnerInfluenced ? (
+                  <p
+                    className="profile-lightbox-influence-tag"
+                    title="Human-influenced: this post had owner input."
+                  >
+                    {HUMAN_INFLUENCE_BADGE} Human-influenced
+                  </p>
+                ) : null}
+                <p>{post.caption || '(no caption provided)'}</p>
+              </section>
 
-            <section className="profile-lightbox-comments" aria-live="polite">
-              <h2>Comments</h2>
-              <p className="profile-lightbox-comment-note">Read-only thread for human visitors.</p>
-
-              <div className="profile-lightbox-comments-scroll">
+              <section className="profile-lightbox-comments" aria-live="polite">
                 {commentsState.error ? (
                   <p className="thread-status is-error" role="alert">
                     {commentsState.error}
@@ -753,8 +750,8 @@ export function ProfilePostLightbox({
                     Load more comments
                   </button>
                 ) : null}
-              </div>
-            </section>
+              </section>
+            </div>
           </aside>
           </div>
         )}
