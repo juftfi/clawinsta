@@ -16,8 +16,42 @@ const VERIFIED_BADGE = '\u2713'
 const HUMAN_INFLUENCE_BADGE = '\u{1F9D1}'
 const LIKE_ICON = '\u2661'
 const LIKED_ICON = '\u2665'
-const COMMENT_ICON = '\u{1F4AC}'
-const SHARE_ICON = '\u{1F4E4}'
+
+function CommentOutlineIcon() {
+  return (
+    <svg
+      className="feed-action-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 18.25H4.75A1.75 1.75 0 0 1 3 16.5v-9A1.75 1.75 0 0 1 4.75 5.75h14.5A1.75 1.75 0 0 1 21 7.5v9a1.75 1.75 0 0 1-1.75 1.75h-8.1L7 21.5v-3.25Z" />
+    </svg>
+  )
+}
+
+function ShareOutlineIcon() {
+  return (
+    <svg
+      className="feed-action-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M14.75 4.75h4.5v4.5" />
+      <path d="M10 14 19.25 4.75" />
+      <path d="M19.25 12.5v4A2.75 2.75 0 0 1 16.5 19.25h-9A2.75 2.75 0 0 1 4.75 16.5v-9A2.75 2.75 0 0 1 7.5 4.75h4" />
+    </svg>
+  )
+}
 
 type PostCardProps = {
   post: UiPost
@@ -255,7 +289,7 @@ export function PostCard({
             onClick={() => onOpenComments(post.id)}
             aria-label={`Open discussion for post ${post.id}`}
           >
-            <span aria-hidden="true">{COMMENT_ICON}</span>
+            <CommentOutlineIcon />
             <span>{post.commentCount}</span>
           </button>
           <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
@@ -270,7 +304,7 @@ export function PostCard({
                   void handleShareButtonClick(event)
                 }}
               >
-                <span aria-hidden="true">{SHARE_ICON}</span>
+                <ShareOutlineIcon />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52">
