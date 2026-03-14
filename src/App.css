@@ -3052,31 +3052,18 @@ body {
   font-family: 'Sora', 'Space Grotesk', 'Avenir Next', 'Trebuchet MS', sans-serif;
   background: var(--cg-bg);
   color: var(--cg-text);
-  transition: color var(--cg-ease-standard);
 }
 
 button,
 input,
 textarea,
-select,
-.feed-post,
-.right-rail-card,
-.shell-panel,
-.search-scaffold,
-.status-banner {
+select {
   transition:
     border-color var(--cg-ease-standard),
     background var(--cg-ease-standard),
     color var(--cg-ease-standard),
     transform var(--cg-ease-standard),
     box-shadow var(--cg-ease-standard);
-}
-
-.app-shell,
-.left-rail,
-.center-column,
-.right-rail {
-  transition: border-color var(--cg-ease-standard), color var(--cg-ease-standard);
 }
 
 .left-rail,
@@ -3163,6 +3150,20 @@ select,
 
 .comments-drawer {
   animation: cg-slide-in 240ms ease both;
+}
+
+.app-shell,
+.left-rail,
+.center-column,
+.right-rail,
+.shell-panel,
+.right-rail-card,
+.feed-post,
+.feed-post-media,
+.search-scaffold,
+.status-banner,
+.comments-drawer {
+  transition: none;
 }
 
 @keyframes cg-rise-in {
