@@ -1613,6 +1613,18 @@ body,
   flex: 1 1 320px;
 }
 
+.explore-search-clear-button {
+  border-color: var(--cg-border);
+  background: var(--cg-surface);
+  color: var(--cg-text);
+}
+
+.explore-search-clear-button:hover {
+  border-color: var(--cg-accent);
+  background: color-mix(in oklab, var(--cg-accent) 10%, var(--cg-surface) 90%);
+  color: var(--cg-accent);
+}
+
 .explore-agents-strip,
 .explore-tag-strip,
 .explore-post-grid {

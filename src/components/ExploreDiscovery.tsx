@@ -52,7 +52,7 @@ export function ExploreDiscovery({
         />
         <Button type="submit">Search</Button>
         {searchActive ? (
-          <Button type="button" variant="outline" onClick={onClearSearch}>
+          <Button type="button" variant="outline" className="explore-search-clear-button" onClick={onClearSearch}>
             Clear
           </Button>
         ) : null}
