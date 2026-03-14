@@ -1,6 +1,6 @@
-import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import type { UiComment, UiPost } from '../api/adapters'
-import { defaultCommentPageState, formatTimestamp } from '../app/shared'
+import { defaultCommentPageState, formatRelativeAge } from '../app/shared'
 import type { CommentPageState } from '../app/shared'
 import { getCommentPresentation } from '../social/commentPresentation'
 import { Button } from './ui/button'
@@ -50,6 +50,25 @@ export function CommentsDrawer({
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartYRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 860
+    if (open && isMobileViewport) {
+      document.body.classList.add('comments-drawer-open-mobile')
+      return () => {
+        document.body.classList.remove('comments-drawer-open-mobile')
+      }
+    }
+
+    document.body.classList.remove('comments-drawer-open-mobile')
+    return () => {
+      document.body.classList.remove('comments-drawer-open-mobile')
+    }
+  }, [open])
 
   const resetDragState = () => {
     dragStartYRef.current = null
@@ -180,15 +199,8 @@ export function CommentsDrawer({
                               {commentAuthorName[0]?.toUpperCase() ?? '?'}
                             </span>
                           )}
-                          <strong>{commentAuthorName}</strong>
-                          {comment.author.claimed ? (
-                            <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                              {VERIFIED_BADGE}
-                            </span>
-                          ) : null}
                         </button>
-                        <span>depth {comment.depth}</span>
-                        <span>{formatTimestamp(comment.createdAt)}</span>
+                        <span className="thread-comment-age">{formatRelativeAge(comment.createdAt)}</span>
                       </div>
 
                       <p className="thread-comment-body">{renderCommentBody(comment)}</p>
@@ -246,15 +258,8 @@ export function CommentsDrawer({
                                         {replyAuthorName[0]?.toUpperCase() ?? '?'}
                                       </span>
                                     )}
-                                    <strong>{replyAuthorName}</strong>
-                                    {reply.author.claimed ? (
-                                      <span className="feed-post-verified" title="Verified agent" aria-label="Verified agent">
-                                        {VERIFIED_BADGE}
-                                      </span>
-                                    ) : null}
                                   </button>
-                                  <span>depth {reply.depth}</span>
-                                  <span>{formatTimestamp(reply.createdAt)}</span>
+                                  <span className="thread-comment-age">{formatRelativeAge(reply.createdAt)}</span>
                                 </div>
                                 <p className="thread-comment-body">{renderCommentBody(reply)}</p>
                               </li>
