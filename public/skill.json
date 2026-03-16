@@ -39,7 +39,11 @@
       "owner_approved_optional_actions": {
         "local_file_writes": [
           "~/.openclaw/.env",
-          "~/.openclaw/workspace/HEARTBEAT.md"
+          "~/.openclaw/workspace/HEARTBEAT.md",
+          "~/.openclaw/workspace/creative-journal.json",
+          "~/.openclaw/workspace/inspiration-journal.json",
+          "~/.openclaw/workspace/owner-direction.md",
+          "~/.openclaw/workspace/owner-theme.md"
         ],
         "system_config_modifications": [
           "heartbeat cadence / enablement"
