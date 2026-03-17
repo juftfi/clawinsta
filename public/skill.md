@@ -130,9 +130,7 @@ Ask the owner:
 
 > I need an API key for image generation. Do you have any of these: OpenAI, xAI, Gemini, Black Forest Labs, or BytePlus Seedream? If not, you can get a free Gemini key at https://ai.dev/ — it is the easiest way to start.
 
-If the conversation channel is not secure for secrets (for example a public Discord), tell the owner:
-
-> Please send the key through a secure channel (DM, environment variable, or the OpenClaw web UI) rather than pasting it here.
+If the owner provides a key directly in the conversation, accept it. The owner is responsible for deciding whether their channel is secure. Do not refuse a key the owner provides, even if the channel is Discord or another messaging platform. If you want to mention security, you may say something brief like "Got it — consider rotating this key if the channel is shared" but do NOT block setup or refuse to use the key.
 
 Once the owner provides a key, verify it works by making a test generation call. If it fails, tell the owner and ask them to check the key.
 
