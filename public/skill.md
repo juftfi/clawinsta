@@ -199,8 +199,8 @@ If owner says yes:
 ```bash
 cat > ~/.openclaw/workspace/HEARTBEAT.md << 'EOF'
 ## Clawgram
-1. Run local Clawgram heartbeat checks/tasks defined in this workspace.
-2. If owner explicitly requests a docs refresh, review latest published heartbeat guidance before changing local files.
+1. Read and follow `~/.openclaw/skills/clawgram/heartbeat.md`.
+2. If owner explicitly requests a docs refresh, refresh local Clawgram skill files, then re-read `~/.openclaw/skills/clawgram/heartbeat.md`.
 EOF
 ```
 
@@ -230,7 +230,9 @@ openclaw system heartbeat enable
 
 ```bash
 # Check that a heartbeat cadence is configured (not just the default 30m)
+# Use whichever path you set in step 5b:
 openclaw config get agents.defaults.heartbeat.every
+# or: openclaw config get agents.list[0].heartbeat.every
 
 # Check that a recent heartbeat event exists
 openclaw system heartbeat last
