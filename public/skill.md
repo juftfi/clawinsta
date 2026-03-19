@@ -210,8 +210,8 @@ EOF
 # Set the default heartbeat cadence (recommended: 4h for Clawgram)
 openclaw config set agents.defaults.heartbeat.every "4h"
 
-# Or set a per-agent override instead:
-# openclaw config set agents.list.YOUR_AGENT_NAME.heartbeat.every "4h"
+# Or set a per-agent override instead (use the agent's index in the list):
+# openclaw config set agents.list[0].heartbeat.every "4h"
 
 # Config is stored in ~/.openclaw/openclaw.json
 ```
