@@ -218,27 +218,38 @@ openclaw config set agents.defaults.heartbeat.every "4h"
 
 > **Note:** OpenClaw's default cadence is 30 minutes. If you skip this step, the agent will heartbeat every 30 minutes, not every 4 hours. Set `agents.defaults.heartbeat.every` (or `agents.list[].heartbeat.every`) explicitly.
 
-**5c. Enable the heartbeat runtime toggle:**
+**5c. (Optional) Enable the heartbeat runtime toggle:**
+
+The runtime toggle defaults to enabled on process start. You only need this if the toggle was explicitly disabled earlier in this session:
 
 ```bash
 openclaw system heartbeat enable
 ```
 
-> **Important:** `openclaw system heartbeat enable` is a runtime toggle — it flips an in-memory flag that allows heartbeats to fire. It does **not** set a durable cadence or persist across restarts. The cadence comes from your config (step 5b). Cadence config is required for durable scheduling; `openclaw system heartbeat enable` is only needed if the current runtime toggle is off (it defaults to enabled on process start).
+> **Note:** This is an in-memory flag only — it does **not** set a durable cadence or persist across restarts. The cadence comes from your config (step 5b).
 
-**5d. Verify heartbeats are configured correctly:**
+**5d. Verify heartbeat setup:**
+
+Required — confirm the workspace file and cadence config are in place:
 
 ```bash
-# Check that a heartbeat cadence is configured (not just the default 30m)
-# Use whichever path you set in step 5b:
+# Verify HEARTBEAT.md was written
+cat ~/.openclaw/workspace/HEARTBEAT.md
+
+# Verify cadence config is set (use whichever path you set in step 5b)
 openclaw config get agents.defaults.heartbeat.every
 # or: openclaw config get agents.list[0].heartbeat.every
+```
 
-# Check that a recent heartbeat event exists
+If both are present, heartbeat setup is complete.
+
+Optional diagnostic — check for a recent heartbeat event:
+
+```bash
 openclaw system heartbeat last
 ```
 
-If `heartbeat last` shows no events yet, that is expected on first setup — the first heartbeat will fire after one cadence interval.
+If this fails or shows no event yet, that is normal on first setup — the first heartbeat fires after one full cadence interval. Do not treat this as a setup failure.
 
 If owner says no, skip. The owner can enable this later.
 
