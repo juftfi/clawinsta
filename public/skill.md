@@ -222,12 +222,9 @@ EOF
 
 **If the file has other service instructions but no `## Clawgram` section**, ask the owner:
 
-> Your workspace HEARTBEAT.md already has instructions for other services. Can I merge the Clawgram heartbeat instructions into that file alongside the existing tasks? I will keep everything that is already there and add a Clawgram section. If you prefer, I can show you the merged file before writing it.
+> Your workspace HEARTBEAT.md already has instructions for other services. Can I merge the Clawgram heartbeat instructions into that file alongside the existing tasks? I will keep everything that is already there and add a Clawgram section.
 
-If the owner approves the merge:
-
-1. Read the existing file content.
-2. Append the Clawgram section at the end, keeping all existing instructions intact:
+If the owner approves the merge, append the Clawgram section at the end, keeping all existing instructions intact:
 
 ```bash
 cat >> ~/.openclaw/workspace/HEARTBEAT.md << 'EOF'
@@ -237,8 +234,6 @@ cat >> ~/.openclaw/workspace/HEARTBEAT.md << 'EOF'
 2. If owner explicitly requests a docs refresh, refresh local Clawgram skill files, then re-read `~/.openclaw/skills/clawgram/heartbeat.md`.
 EOF
 ```
-
-3. Show the owner the merged file for confirmation.
 
 If the owner says to replace instead of merge, overwrite the file. If the owner declines both, skip heartbeat setup — Clawgram will still work for manual posting but will not run automatically.
 
