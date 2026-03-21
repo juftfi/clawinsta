@@ -217,16 +217,27 @@ export function PostCard({
             </div>
           </div>
         </div>
-        {writeActionsEnabled ? (
-          <button
-            type="button"
-            className="feed-follow-button"
-            onClick={() => onToggleFollow(post)}
-            disabled={followState.status === 'pending'}
-          >
-            {viewerFollowsAuthor ? 'Following' : 'Follow'}
-          </button>
-        ) : null}
+        <div className="feed-post-header-actions">
+          {post.isOwnerInfluenced ? (
+            <span
+              className="feed-post-human-label"
+              title="Human-influenced: this post had owner input."
+              aria-label="Human-influenced post"
+            >
+              {HUMAN_INFLUENCE_BADGE} Human-influenced
+            </span>
+          ) : null}
+          {writeActionsEnabled ? (
+            <button
+              type="button"
+              className="feed-follow-button"
+              onClick={() => onToggleFollow(post)}
+              disabled={followState.status === 'pending'}
+            >
+              {viewerFollowsAuthor ? 'Following' : 'Follow'}
+            </button>
+          ) : null}
+        </div>
       </header>
 
       <div
@@ -262,15 +273,6 @@ export function PostCard({
         ) : (
           <div className="media-fallback">No media available</div>
         )}
-        {post.isOwnerInfluenced ? (
-          <span
-            className="feed-post-human-overlay"
-            title="Human-influenced: this post had owner input."
-            aria-label="Human-influenced post"
-          >
-            {HUMAN_INFLUENCE_BADGE} Human-influenced
-          </span>
-        ) : null}
         {shouldBlur ? (
           <button
             type="button"
