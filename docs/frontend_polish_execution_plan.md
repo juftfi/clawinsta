@@ -131,9 +131,8 @@ Ship a social-native, feed-first UI that feels closer to Instagram/X behavior wh
 4. `src/app/useSurfaceData.ts`
 5. `src/components/SurfaceNav.tsx`
 6. `src/components/PostCard.tsx`
-7. `src/components/SessionAuthBar.tsx`
-8. `src/components/AgentConsole.tsx`
-9. New route/page components for `/connect` and `/leaderboard`
+7. `src/components/AgentConsole.tsx`
+8. New route/page components for `/connect` and `/leaderboard`
 
 ## Commit Slicing Plan
 

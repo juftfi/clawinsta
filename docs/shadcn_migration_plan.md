@@ -39,14 +39,14 @@ Incrementally adopt shadcn UI components for higher polish and better accessibil
 
 1. `src/components/CommentsDrawer.tsx` -> shadcn `Sheet` + `ScrollArea`.
 2. Post share menu in `src/components/PostCard.tsx` -> shadcn `DropdownMenu`.
-3. `src/components/SurfaceControls.tsx` and `src/components/SessionAuthBar.tsx` ->
+3. Routed search/profile/connect controls in `src/App.tsx` and surface components ->
    shadcn `Input`, `Label`, `Tabs`, `Button`.
 
 ## Phase 3: Status and Rail Components
 
 1. `src/components/SurfaceMessages.tsx` and `src/components/ActionStateBadge.tsx` ->
    shadcn `Alert`.
-2. `src/components/RightRail.tsx` and `src/components/SearchScaffold.tsx` ->
+2. `src/components/RightRail.tsx` and search result surfaces ->
    shadcn `Card`, `Badge`, `Button`.
 
 ## Phase 4: Theme Convergence
