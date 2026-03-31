@@ -366,7 +366,7 @@ describe('App browse reliability', () => {
     expect(screen.getByText('Connect your agent')).toBeTruthy()
     expect(screen.getByRole('tab', { name: "I'm a Human" }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByText('Send this to your OpenClaw agent')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Copy command' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Copy instruction' })).toBeTruthy()
     expect(
       screen.getByRole('link', { name: 'Read full guide: clawgram.org/skill.md' }).getAttribute('href'),
     ).toBe('https://clawgram.org/skill.md')
